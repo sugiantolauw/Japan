@@ -1,0 +1,72 @@
+{
+  "seed": 20260918,
+  "created": "2026-09-18",
+  "method": "articles sorted, pre-inspected articles pinned to exploration, remainder shuffled with Random(seed)",
+  "disclosure": "Global STRUCTURAL statistics (copy rate, reference identity, truncation, caption prevalence, near-twin pairs) were computed over all 250 summaries BEFORE this split existed. Those deterministic detectors are therefore NOT held out. The semantic judge (rubric, prompts, thresholds) is developed on exploration+development only and frozen before held-out results are examined.",
+  "pre_inspected": [
+    "34991666",
+    "45715110",
+    "50162696",
+    "51145805",
+    "52873099",
+    "54083932"
+  ],
+  "splits": {
+    "exploration": [
+      "34991666",
+      "45715110",
+      "50162696",
+      "51145805",
+      "52873099",
+      "54083932",
+      "37426493",
+      "48116477",
+      "41875333",
+      "45392795"
+    ],
+    "development": [
+      "43411421",
+      "41396293",
+      "35278497",
+      "51395937",
+      "45583472",
+      "40504740",
+      "50285251",
+      "36285464",
+      "42520667",
+      "46601033"
+    ],
+    "heldout": [
+      "43985653",
+      "44026917",
+      "53174534",
+      "39776572",
+      "43284438",
+      "52407075",
+      "50469832",
+      "features-and-analysis-46478194",
+      "features-and-analysis-46643494",
+      "44708557",
+      "37712268",
+      "52451669",
+      "35647760",
+      "features-and-analysis-42940954",
+      "48493511",
+      "37868736",
+      "features-and-analysis-40566272",
+      "52000333",
+      "45318822",
+      "38476572",
+      "53274336",
+      "40490051",
+      "44708203",
+      "45001963",
+      "46669858",
+      "53732134",
+      "36881141",
+      "55155049",
+      "39932207",
+      "44285473"
+    ]
+  }
+}
