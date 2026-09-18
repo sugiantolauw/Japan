@@ -1,0 +1,77 @@
+{
+  "annotator": "human",
+  "fresh_session": true,
+  "saw_orchestrator_context": false,
+  "articles": [
+    {
+      "article_no": 1,
+      "article_id": "features-and-analysis-46478194",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    },
+    {
+      "article_no": 2,
+      "article_id": "43985653",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    },
+    {
+      "article_no": 3,
+      "article_id": "features-and-analysis-42940954",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    },
+    {
+      "article_no": 4,
+      "article_id": "38476572",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    },
+    {
+      "article_no": 5,
+      "article_id": "52000333",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    },
+    {
+      "article_no": 6,
+      "article_id": "36881141",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    },
+    {
+      "article_no": 7,
+      "article_id": "55155049",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    },
+    {
+      "article_no": 8,
+      "article_id": "44708557",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    },
+    {
+      "article_no": 9,
+      "article_id": "44285473",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    },
+    {
+      "article_no": 10,
+      "article_id": "52407075",
+      "ranking": "",
+      "factual_error_letters": [],
+      "minutes": null
+    }
+  ]
+}

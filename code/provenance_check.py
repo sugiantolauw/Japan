@@ -27,9 +27,13 @@ bad = 0
 def fail(msg):
     global bad; bad += 1; print("FAIL", msg)
 
-# subagent outputs
-for path in glob.glob(os.path.join(ROOT, "runs", "**", "*.json*"), recursive=True):
-    if os.path.basename(path) in ("split.json", "experiments.jsonl"): continue
+# Model-generated outputs only. Deterministic derived data under runs/ (arm census,
+# selections, keymaps) is reproducible from its script and carries no producer stamp;
+# requiring one there conflates "who ran a script" with "which model made a judgement".
+MODEL_DIRS = ("runs/judge", "runs/judge_repeat", "runs/judge_crosstier", "runs/keypoints")
+paths = [q for d in MODEL_DIRS
+           for q in glob.glob(os.path.join(ROOT, d, "**", "*.json*"), recursive=True)]
+for path in paths:
     for ln, r in rows(path):
         p = r.get("producer")
         if not p: fail(f"{path}:{ln} missing producer"); continue
