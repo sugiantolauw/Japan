@@ -50,10 +50,11 @@ that got only those right would look strong while adding nothing — so baseline
 must be reported *excluding* structurally-determined candidates, or the LLM judge is being
 graded against a shortcut it cannot beat and does not need to.
 
-### 1.3 A seventh arm I did not predict
+### 1.3 The misattached arm
 
-Reading the Brazil museum fire article, one candidate turned out to be about **Uber's CEO
-pivoting to e-scooters**. A systematic search found **15 summaries attached to the wrong
+I had listed "off-topic or wrong-article summary" among my ten initial hypotheses, but
+expected it as an occasional defect rather than a systematic arm. Reading the Brazil museum
+fire article, one candidate turned out to be about **Uber's CEO pivoting to e-scooters**. A systematic search found **15 summaries attached to the wrong
 article**: Finnish paternity leave under Iraqi Kurdish forces at Mosul, yoghurt sugar
 content under the Academy Awards. Two are references lifted from other articles in this
 same corpus.
@@ -107,8 +108,33 @@ article. That candidate alone justifies keeping coverage separate from faithfuln
 
 ### 1.6 Hypothesis ledger
 
-**Survived.** The fixed slot template (49/50). References as comparison group rather than
-ground truth (three independent failure types).
+Ten failure modes were hypothesised before looking at the data. **Five survived, five
+died**, and the split is not arbitrary.
+
+| hypothesis | outcome |
+|---|---|
+| verbatim lead extraction | **survived** — 50/50 articles |
+| hallucinated numbers / dates / names | **survived** |
+| entity swap | **survived** — predicted as the mode embedding similarity is blind to; it is |
+| mid-sentence truncation | **survived** — 17/50 |
+| off-topic / wrong-article summary | **survived** — 15/50 |
+| >3 sentences | died — 2/250 |
+| wrong or mixed language | died — 0/250 |
+| degenerate repetition | died — 0/250 |
+| meta-preamble (`以下が要約です:`) | died — 0/250 |
+| vacuous genericity | died — not observed |
+
+**Every hypothesis that survived concerns content being wrong; every one that died concerns
+output being malformed.** That is the load-bearing result of the exploration: this
+dataset's planted failures are semantic, so lexical and format checks cannot carry the
+evaluation, and format compliance does not deserve to be a scored dimension.
+
+What was *not* anticipated was structural rather than behavioural: the 4+1 slot template,
+the reference being injected as a candidate, sentence-order permutation, duplicate
+references, and polarity reversal. Those came from the data alone.
+
+**Also survived.** The fixed slot template (49/50). References as comparison group rather
+than ground truth (three independent failure types).
 
 **Revised.**
 
