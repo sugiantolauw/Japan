@@ -279,14 +279,28 @@ def main():
     # Opportunity collection
     # ----------------------------------------------------------------
 
-    def make_item(kind, s, article_text, start, end, orig, repl, direction, meta):
+    def make_item(kind, s, article_text, orig, repl, direction, meta):
+        """Build one perturbation candidate, replacing EVERY occurrence of
+        `orig` in the summary with `repl` (not just the first). A span that
+        occurs more than once must be replaced consistently everywhere, or
+        the perturbed text becomes internally self-contradictory (e.g. "he
+        alone" ... "10 people") and is then detectable by noticing it
+        contradicts ITSELF, with no reference to the article at all -- which
+        defeats the purpose of a suite meant to measure SOURCE-grounded
+        checking. Returns None if the pair cannot be safely applied (e.g.
+        replacement text would itself reintroduce the original span)."""
         summary_text = s["summary"]
-        assert summary_text[start:end] == orig
-        perturbed = summary_text[:start] + repl + summary_text[end:]
-        # exact-span-diff check
-        assert summary_text[:start] == perturbed[:start]
-        assert summary_text[start + len(orig):] == perturbed[start + len(repl):]
-        assert perturbed != summary_text
+        assert orig in summary_text
+        perturbed = summary_text.replace(orig, repl)
+        if perturbed == summary_text:
+            return None
+        # global-replace correctness: every occurrence replaced, nothing missed
+        assert perturbed == summary_text.replace(orig, repl)
+        if orig in perturbed:
+            # repl itself re-introduced orig as a substring (or orig was
+            # left over some other way) -- reject rather than emit a
+            # partially/self-inconsistently corrupted item.
+            return None
         if direction == "drop":
             assert orig in article_text, f"{kind}: span_original not in article for {s['summary_id']}"
             assert repl not in article_text, f"{kind}: span_replacement leaked into article for {s['summary_id']}"
@@ -313,15 +327,20 @@ def main():
         article_text = articles[s["article_id"]]["text"]
 
         # --- number_swap ---
+        seen_tokens = set()
         for (start, end, tok) in find_number_spans(summary_text):
+            if tok in seen_tokens:
+                continue
+            seen_tokens.add(tok)
             if tok not in article_text:
                 continue
             repl = gen_number_replacement(tok, article_text, rng)
             if repl is None:
                 continue
-            item = make_item("number_swap", s, article_text, start, end, tok, repl,
-                              "drop", {"note": "numeric token replaced; verified absent from article"})
-            number_opps.append(item)
+            item = make_item("number_swap", s, article_text, tok, repl,
+                              "drop", {"note": "numeric token replaced (all occurrences); verified absent from article"})
+            if item is not None:
+                number_opps.append(item)
 
         # --- entity_swap ---
         for (category, orig, repl) in ENTITY_TABLE:
@@ -333,11 +352,10 @@ def main():
                 continue
             if repl in summary_text:
                 continue
-            start = summary_text.find(orig)
-            end = start + len(orig)
-            item = make_item("entity_swap", s, article_text, start, end, orig, repl,
+            item = make_item("entity_swap", s, article_text, orig, repl,
                               "drop", {"category": category})
-            entity_opps.append(item)
+            if item is not None:
+                entity_opps.append(item)
 
         # --- polarity_reversal ---
         for (a, b) in ANTONYM_PAIRS:
@@ -348,21 +366,19 @@ def main():
                     continue
                 if repl in article_text:
                     continue
-                start = summary_text.find(orig)
-                end = start + len(orig)
-                item = make_item("polarity_reversal", s, article_text, start, end, orig, repl,
+                item = make_item("polarity_reversal", s, article_text, orig, repl,
                                   "drop", {"antonym_pair": [a, b]})
-                polarity_opps.append(item)
+                if item is not None:
+                    polarity_opps.append(item)
 
         # --- paraphrase_control ---
         for (orig, repl) in PARAPHRASE_PAIRS:
             if orig not in summary_text:
                 continue
-            start = summary_text.find(orig)
-            end = start + len(orig)
-            item = make_item("paraphrase_control", s, article_text, start, end, orig, repl,
-                              "unchanged", {"note": "meaning-preserving lexical substitution"})
-            paraphrase_opps.append(item)
+            item = make_item("paraphrase_control", s, article_text, orig, repl,
+                              "unchanged", {"note": "meaning-preserving lexical substitution (all occurrences)"})
+            if item is not None:
+                paraphrase_opps.append(item)
 
     print(f"[opportunities found] number_swap={len(number_opps)} "
           f"entity_swap={len(entity_opps)} polarity_reversal={len(polarity_opps)} "
@@ -433,31 +449,80 @@ def main():
 
     print("\n[verification]")
     all_ok = True
+    n_checked = 0
+    check_counts = Counter()  # per-check pass counts, for reporting
     for kind, items in all_selected.items():
         for it in items:
+            n_checked += 1
             article_text = articles[it["article_id"]]["text"]
             orig = it["span_original"]
             repl = it["span_replacement"]
-            # exact single-span diff
             ot, pt = it["original_text"], it["perturbed_text"]
-            if ot == pt:
+            is_drop = it["expected_faithfulness_direction"] == "drop"
+
+            # check: perturbed_text differs from original_text
+            if ot != pt:
+                check_counts["differs_from_original"] += 1
+            else:
                 print(f"  FAIL {kind} {it['source_summary_id']}: perturbed_text == original_text")
                 all_ok = False
-                continue
-            idx = ot.find(orig)
-            if idx == -1 or ot[:idx] + repl + ot[idx + len(orig):] != pt:
-                # fall back to a generic prefix/suffix check
-                pass
-            if it["article_id"] in heldout_articles:
+
+            # check: perturbed_text is EXACTLY original_text with every
+            # occurrence of span_original replaced by span_replacement
+            # (global replace, not a partial/first-occurrence edit)
+            if pt == ot.replace(orig, repl):
+                check_counts["global_replace_exact"] += 1
+            else:
+                print(f"  FAIL {kind} {it['source_summary_id']}: perturbed_text is not "
+                      f"exactly original_text with every occurrence of span_original replaced")
+                all_ok = False
+
+            # check: no held-out article leaked in
+            if it["article_id"] not in heldout_articles:
+                check_counts["no_heldout"] += 1
+            else:
                 print(f"  FAIL {kind} {it['source_summary_id']}: held-out article leaked in")
                 all_ok = False
-            if it["expected_faithfulness_direction"] == "drop":
-                if orig not in article_text:
+
+            if is_drop:
+                # check: span_original DOES appear in the article
+                if orig in article_text:
+                    check_counts["drop_orig_in_article"] += 1
+                else:
                     print(f"  FAIL {kind} {it['source_summary_id']}: span_original not in article")
                     all_ok = False
-                if repl in article_text:
+
+                # check: span_replacement does NOT appear anywhere in the article
+                if repl not in article_text:
+                    check_counts["drop_repl_absent_from_article"] += 1
+                else:
                     print(f"  FAIL {kind} {it['source_summary_id']}: span_replacement found in article")
                     all_ok = False
+
+                # check: span_original does NOT appear anywhere in perturbed_text
+                # -- i.e. the corruption is applied consistently everywhere it
+                # occurs, so the item cannot be caught by noticing it
+                # contradicts ITSELF instead of the source.
+                if orig not in pt:
+                    check_counts["drop_orig_absent_from_perturbed"] += 1
+                else:
+                    print(f"  FAIL {kind} {it['source_summary_id']}: span_original still "
+                          f"present in perturbed_text (partial/self-inconsistent replacement)")
+                    all_ok = False
+
+    print(f"  items checked: {n_checked}")
+    print(f"  [1] differs_from_original: {check_counts['differs_from_original']}/{n_checked}")
+    print(f"  [2] global_replace_exact (perturbed == original.replace(orig, repl)): "
+          f"{check_counts['global_replace_exact']}/{n_checked}")
+    print(f"  [3] no_heldout_article: {check_counts['no_heldout']}/{n_checked}")
+    n_drop = sum(1 for items in all_selected.values() for it in items
+                 if it["expected_faithfulness_direction"] == "drop")
+    print(f"  [4] drop-type: span_original present in article: "
+          f"{check_counts['drop_orig_in_article']}/{n_drop}")
+    print(f"  [5] drop-type: span_replacement absent from article: "
+          f"{check_counts['drop_repl_absent_from_article']}/{n_drop}")
+    print(f"  [6] drop-type: span_original absent from perturbed_text "
+          f"(no self-contradiction): {check_counts['drop_orig_absent_from_perturbed']}/{n_drop}")
     print(f"  all checks passed: {all_ok}")
 
     # ----------------------------------------------------------------
@@ -573,18 +638,47 @@ def main():
     report_lines.append("")
 
     report_lines.append("## Verification results\n")
-    report_lines.append(f"- All checks passed: **{all_ok}**")
+    report_lines.append(f"- All checks passed: **{all_ok}** ({n_checked} items checked)")
     report_lines.append(f"- Distinct source summaries perturbed: {n_distinct_summaries}")
     report_lines.append(f"- Max perturbations from a single source summary: "
                          f"{max_per_summary_actual} (cap = {MAX_PER_SUMMARY})")
     report_lines.append(f"- Held-out article present in output: **{held_out_present}** "
                          "(must be False)")
-    report_lines.append("- For every drop-type item (number_swap, entity_swap, "
-                         "polarity_reversal): span_replacement verified ABSENT from "
-                         "the article, span_original verified PRESENT in the article.")
-    report_lines.append("- For every item: perturbed_text differs from original_text "
-                         "at exactly the intended span (prefix/suffix around the span "
-                         "are byte-identical to the original).")
+    report_lines.append(f"- [1] perturbed_text differs from original_text: "
+                         f"{check_counts['differs_from_original']}/{n_checked}")
+    report_lines.append(f"- [2] perturbed_text is EXACTLY original_text with EVERY "
+                         f"occurrence of span_original replaced by span_replacement "
+                         f"(global replace, not a first-occurrence-only edit): "
+                         f"{check_counts['global_replace_exact']}/{n_checked}")
+    report_lines.append(f"- [3] no held-out article present: "
+                         f"{check_counts['no_heldout']}/{n_checked}")
+    report_lines.append(f"- [4] drop-type items where span_original is verified PRESENT "
+                         f"in the article: {check_counts['drop_orig_in_article']}/{n_drop}")
+    report_lines.append(f"- [5] drop-type items where span_replacement is verified "
+                         f"ABSENT from the article: "
+                         f"{check_counts['drop_repl_absent_from_article']}/{n_drop}")
+    report_lines.append(f"- [6] drop-type items where span_original is verified ABSENT "
+                         f"from perturbed_text, i.e. the corruption was applied to EVERY "
+                         f"occurrence so the item cannot be caught by noticing it "
+                         f"contradicts itself instead of the source: "
+                         f"{check_counts['drop_orig_absent_from_perturbed']}/{n_drop}")
+    report_lines.append("")
+    report_lines.append("**Multi-occurrence spans are replaced globally, not just at "
+                         "the first occurrence.** A span that occurs more than once in a "
+                         "summary (e.g. a count repeated in two sentences) was originally "
+                         "replaced at only one location, which could leave the original "
+                         "value still present elsewhere in the perturbed text -- e.g. "
+                         "'he alone' in one clause and 'a group of 10' in another. Such "
+                         "an item is internally self-contradictory and can be flagged by "
+                         "noticing it disagrees with ITSELF, with no reference to the "
+                         "article at all. Since this suite exists specifically to measure "
+                         "whether a judge does SOURCE-grounded checking, an "
+                         "internally-inconsistent item would let a judge score well via a "
+                         "cheaper route than actually consulting the article, inflating "
+                         "the very recall metric the suite is meant to measure. "
+                         "`make_item()` therefore replaces every occurrence of "
+                         "`span_original` in one pass (`str.replace`, unbounded count) "
+                         "and check [6] above confirms none remain.")
     report_lines.append("")
 
     report_lines.append("## Entity substitution table used\n")
@@ -625,6 +719,20 @@ def main():
     report_lines.append("|---|---|")
     for (orig, repl) in PARAPHRASE_PAIRS:
         report_lines.append(f"| {orig} | {repl} |")
+    report_lines.append("")
+    report_lines.append("All pairs above were read individually and judged genuinely "
+                         "meaning-preserving before inclusion (conservative by design: "
+                         "per the task brief, a pair was skipped rather than included if "
+                         "it could not be made cleanly non-factual-altering). Two pairs "
+                         "were the mildest register shifts in the set and are flagged "
+                         "here explicitly so a reader knows they were considered rather "
+                         "than overlooked: **表明した→明言した** (\"stated\" -> \"stated "
+                         "clearly/explicitly\" -- adds emphasis, not a new claim) and "
+                         "**批判を浴びた→非難を浴びた** (\"drew criticism\" -> \"drew "
+                         "condemnation\" -- a stronger register, but reports the same "
+                         "underlying fact: negative public reaction occurred). Both were "
+                         "judged to preserve the truth-value of the claim, unlike the "
+                         "`polarity_reversal` pairs which invert it.")
     report_lines.append("")
 
     report_lines.append("## Coverage of the observed corruption taxonomy\n")
