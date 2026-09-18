@@ -1,4 +1,4 @@
-# Scoring Rubric v1.1
+# Scoring Rubric v1.2
 
 Frozen before any development or held-out scoring. Every anchor cites a candidate from
 the **exploration split only**. The judge never sees this provenance — only the scale.
@@ -46,9 +46,14 @@ coverage is **recall** of what must be said, selection is **precision** of what 
 |---|---|
 | 4 | every claim SUPPORTED |
 | 3 | all claims SUPPORTED except immaterial UNSUPPORTED detail that does not change meaning |
-| 2 | contains UNSUPPORTED claims material to the meaning; nothing CONTRADICTED |
-| 1 | contains one CONTRADICTED claim |
-| 0 | multiple CONTRADICTED claims, or the candidate describes an event the article does not cover at all |
+| 2 | material UNSUPPORTED **detail** — a plausible fact absent from the source (an unstated date, a descriptor) that invents no event or attribution |
+| 1 | one CONTRADICTED claim, **or one fabricated event, action, policy or quotation** — content invented rather than merely absent |
+| 0 | multiple CONTRADICTED or fabricated claims, or the candidate describes an event the article does not cover at all |
+
+Severity keys on *invention*, not only on the supported/contradicted axis. A fabricated
+government regulation is at least as harmful as a misstated number, and three of the six
+corruption types observed in this data — fabricated quotation, fabricated event,
+hallucinated status — are inventions that no source sentence contradicts.
 
 Observed failure types, all requiring the source to detect: entity swap, number/date swap,
 fabricated quotation, fabricated event, hallucinated status, and **polarity reversal** —
