@@ -21,22 +21,22 @@ Total perturbations generated: 137.
 
 | split | count |
 |---|---|
-| exploration | 72 |
-| development | 65 |
+| exploration | 71 |
+| development | 66 |
 
 ## Counts per type x split
 
 | type | exploration | development |
 |---|---|---|
 | number_swap | 19 | 21 |
-| entity_swap | 19 | 21 |
+| entity_swap | 18 | 22 |
 | polarity_reversal | 13 | 11 |
 | paraphrase_control | 21 | 12 |
 
 ## Verification results
 
 - All checks passed: **True** (137 items checked)
-- Distinct source summaries perturbed: 57
+- Distinct source summaries perturbed: 58
 - Max perturbations from a single source summary: 3 (cap = 3)
 - Held-out article present in output: **False** (must be False)
 - [1] perturbed_text differs from original_text: 137/137
@@ -45,6 +45,9 @@ Total perturbations generated: 137.
 - [4] drop-type items where span_original is verified PRESENT in the article: 104/104
 - [5] drop-type items where span_replacement is verified ABSENT from the article: 104/104
 - [6] drop-type items where span_original is verified ABSENT from perturbed_text, i.e. the corruption was applied to EVERY occurrence so the item cannot be caught by noticing it contradicts itself instead of the source: 104/104
+- [7] number_swap items where the replacement is a semantically POSSIBLE value on its face (month in 1-12, day-of-month in 1-31, and not inside a fixed N泊M日 numeral+counter idiom): 40/40
+
+**Plausibility constraint on number_swap replacements.** Two items in an earlier run were detectable as wrong WITHOUT consulting the article at all: `2泊3日` -> `2泊20日` (the night/day counts in this fixed idiom are grammatically coupled, so 20 days after 2 nights is self-evidently wrong) and `2月14日` -> `23月14日` (there is no 23rd month). Both are the same confound as the multi-occurrence issue above, arriving by a different route: a judge could reject either on surface plausibility alone and never do source-grounded checking, which would inflate recall on exactly the metric this suite exists to measure. `gen_number_replacement()` now (a) restricts any `月`-suffixed replacement to 1-12 and any `日`-suffixed replacement to 1-31, and (b) rejects the opportunity outright (`is_coupled_numeric_idiom()`) if the numeral sits immediately after `泊`, rather than trying to compute a jointly-consistent replacement. Check [7] confirms every number_swap item in the final output satisfies both constraints.
 
 **Multi-occurrence spans are replaced globally, not just at the first occurrence.** A span that occurs more than once in a summary (e.g. a count repeated in two sentences) was originally replaced at only one location, which could leave the original value still present elsewhere in the perturbed text -- e.g. 'he alone' in one clause and 'a group of 10' in another. Such an item is internally self-contradictory and can be flagged by noticing it disagrees with ITSELF, with no reference to the article at all. Since this suite exists specifically to measure whether a judge does SOURCE-grounded checking, an internally-inconsistent item would let a judge score well via a cheaper route than actually consulting the article, inflating the very recall metric the suite is meant to measure. `make_item()` therefore replaces every occurrence of `span_original` in one pass (`str.replace`, unbounded count) and check [6] above confirms none remain.
 

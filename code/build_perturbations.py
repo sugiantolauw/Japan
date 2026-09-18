@@ -247,12 +247,39 @@ def main():
         m = re.match(r"(\d[\d,]*(?:\.\d+)?)(.*)$", tok)
         return m.group(1), m.group(2)
 
-    def gen_number_replacement(tok, article_text, rng):
+    # Plausibility bounds for suffixes where an out-of-range value is
+    # detectable as wrong WITHOUT consulting the article at all (there is no
+    # 23rd month; a day-of-month above 31 does not exist). Restricting the
+    # replacement to a value that is still *possible* on its face keeps the
+    # corruption source-groundable rather than surface-rejectable.
+    PLAUSIBLE_RANGE = {
+        "月": (1, 12),
+        "日": (1, 31),
+    }
+
+    def is_coupled_numeric_idiom(text, tok):
+        """True if ANY occurrence of `tok` in `text` sits inside a fixed
+        numeral+counter compound where two numerals are grammatically
+        locked together -- e.g. N-泊-M-日 ("N nights, M days"), where M is
+        conventionally N+1 and cannot be edited independently without
+        producing a self-contradictory idiom (2泊20日). Since a global
+        replace touches every occurrence of `tok`, if even one occurrence
+        is coupled this way the whole opportunity is rejected rather than
+        edited around."""
+        for m in re.finditer(re.escape(tok), text):
+            if m.start() > 0 and text[m.start() - 1] == "泊":
+                return True
+        return False
+
+    def gen_number_replacement(tok, article_text, summary_text, rng):
         core, suffix = split_number(tok)
+        if is_coupled_numeric_idiom(summary_text, tok):
+            return None
         core_clean = core.replace(",", "")
         is_decimal = "." in core_clean
         deltas = [3, -3, 5, -5, 7, -7, 11, -2, 9, -9, 13, -4, 17, -6, 21]
         rng.shuffle(deltas)
+        lo_hi = PLAUSIBLE_RANGE.get(suffix)
         if is_decimal:
             base = float(core_clean)
             candidates = [round(base + d * 0.1, 1) for d in deltas]
@@ -266,6 +293,8 @@ def main():
                 cand_str = f"{cand:.1f}"
             else:
                 if cand <= 0:
+                    continue
+                if lo_hi is not None and not (lo_hi[0] <= cand <= lo_hi[1]):
                     continue
                 cand_str = str(cand)
             new_tok = cand_str + suffix
@@ -334,7 +363,7 @@ def main():
             seen_tokens.add(tok)
             if tok not in article_text:
                 continue
-            repl = gen_number_replacement(tok, article_text, rng)
+            repl = gen_number_replacement(tok, article_text, summary_text, rng)
             if repl is None:
                 continue
             item = make_item("number_swap", s, article_text, tok, repl,
@@ -510,6 +539,34 @@ def main():
                           f"present in perturbed_text (partial/self-inconsistent replacement)")
                     all_ok = False
 
+                # check: the replacement value is semantically POSSIBLE on
+                # its face (there is no 23rd month; a day-of-month above 31
+                # does not exist), and the edited numeral is not part of a
+                # fixed numeral+counter idiom (N-泊-M-日) that a reader can
+                # reject as self-contradictory without ever consulting the
+                # article. This is the same confound as check [6] --
+                # "detectable as wrong without source-grounded checking" --
+                # arriving via surface plausibility instead of internal
+                # self-contradiction.
+                if kind == "number_swap":
+                    plausible = True
+                    m = re.match(r"^(\d+)(月|日)$", repl)
+                    if m:
+                        val, suf = int(m.group(1)), m.group(2)
+                        lo, hi = PLAUSIBLE_RANGE[suf]
+                        if not (lo <= val <= hi):
+                            plausible = False
+                    if is_coupled_numeric_idiom(ot, orig):
+                        plausible = False
+                    if plausible:
+                        check_counts["number_plausible"] += 1
+                    else:
+                        print(f"  FAIL {kind} {it['source_summary_id']}: replacement "
+                              f"'{repl}' is not a semantically possible value "
+                              f"(out-of-range month/day, or a coupled numeral+counter "
+                              f"idiom such as N泊M日)")
+                        all_ok = False
+
     print(f"  items checked: {n_checked}")
     print(f"  [1] differs_from_original: {check_counts['differs_from_original']}/{n_checked}")
     print(f"  [2] global_replace_exact (perturbed == original.replace(orig, repl)): "
@@ -523,6 +580,12 @@ def main():
           f"{check_counts['drop_repl_absent_from_article']}/{n_drop}")
     print(f"  [6] drop-type: span_original absent from perturbed_text "
           f"(no self-contradiction): {check_counts['drop_orig_absent_from_perturbed']}/{n_drop}")
+    n_number_drop = sum(1 for items in all_selected.values() for it in items
+                        if it["type"] == "number_swap"
+                        and it["expected_faithfulness_direction"] == "drop")
+    print(f"  [7] number_swap: replacement is a semantically possible value "
+          f"(month in 1-12, day in 1-31, not inside a N泊M日 idiom): "
+          f"{check_counts['number_plausible']}/{n_number_drop}")
     print(f"  all checks passed: {all_ok}")
 
     # ----------------------------------------------------------------
@@ -662,6 +725,29 @@ def main():
                          f"occurrence so the item cannot be caught by noticing it "
                          f"contradicts itself instead of the source: "
                          f"{check_counts['drop_orig_absent_from_perturbed']}/{n_drop}")
+    report_lines.append(f"- [7] number_swap items where the replacement is a "
+                         f"semantically POSSIBLE value on its face (month in 1-12, "
+                         f"day-of-month in 1-31, and not inside a fixed N泊M日 "
+                         f"numeral+counter idiom): "
+                         f"{check_counts['number_plausible']}/{n_number_drop}")
+    report_lines.append("")
+    report_lines.append("**Plausibility constraint on number_swap replacements.** Two "
+                         "items in an earlier run were detectable as wrong WITHOUT "
+                         "consulting the article at all: `2泊3日` -> `2泊20日` (the "
+                         "night/day counts in this fixed idiom are grammatically "
+                         "coupled, so 20 days after 2 nights is self-evidently wrong) "
+                         "and `2月14日` -> `23月14日` (there is no 23rd month). Both are "
+                         "the same confound as the multi-occurrence issue above, arriving "
+                         "by a different route: a judge could reject either on surface "
+                         "plausibility alone and never do source-grounded checking, which "
+                         "would inflate recall on exactly the metric this suite exists to "
+                         "measure. `gen_number_replacement()` now (a) restricts any "
+                         "`月`-suffixed replacement to 1-12 and any `日`-suffixed "
+                         "replacement to 1-31, and (b) rejects the opportunity outright "
+                         "(`is_coupled_numeric_idiom()`) if the numeral sits immediately "
+                         "after `泊`, rather than trying to compute a jointly-consistent "
+                         "replacement. Check [7] confirms every number_swap item in the "
+                         "final output satisfies both constraints.")
     report_lines.append("")
     report_lines.append("**Multi-occurrence spans are replaced globally, not just at "
                          "the first occurrence.** A span that occurs more than once in a "
