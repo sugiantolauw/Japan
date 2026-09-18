@@ -1,4 +1,4 @@
-# Scoring Rubric v1
+# Scoring Rubric v1.1
 
 Frozen before any development or held-out scoring. Every anchor cites a candidate from
 the **exploration split only**. The judge never sees this provenance — only the scale.
@@ -86,7 +86,14 @@ and it never mentions that Trump said he would designate it a terrorist organisa
 Score 2 anchor: `…07d482c6` opens `トランプ氏は…非難している` and reaches the actual
 announcement only in the second sentence. Score 1 anchor: `…7b3a10b0` ends `逃走したが、`.
 
-### 4. Selection — is the included material summary-appropriate?
+### 4. Selection — is the included material of a kind that belongs in a summary?
+
+**Scope: this dimension scores the TYPE of material, not its topical relevance.** Whether
+the content is about the right article is Coverage's job. A candidate that is fluent,
+well-formed summary prose about a completely different news story scores HIGH on selection
+and 0 on coverage — that vector is the diagnostic, and collapsing both to 0 destroys it.
+Penalise here only for material that does not belong in any summary: photo captions,
+journalist bylines, definitional asides, quote attributions, navigational text.
 
 | score | anchor |
 |---|---|
