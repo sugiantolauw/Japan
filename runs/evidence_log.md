@@ -192,3 +192,79 @@ disclosed.
    only 7 candidates exceed 0.50. One (`…9e82620f`, copy=0.76) is a genuine mid-article
    extract that opens on a quote attribution and never states the main finding — a
    selection failure distinct from lead extraction.
+
+---
+
+## Articles 51145805 / 52873099 / 54083932 — exploration complete (10/10)
+
+### NEW corruption type: polarity reversal
+
+Two instances, and it is the most dangerous type seen so far because the surface
+form is untouched — same entities, same numbers, same register.
+
+| summary_id | article says | candidate says |
+|---|---|---|
+| `…3f3f4b05` | Hong Kong Express **suspended** the pregnancy tests immediately and apologised (`この対応を即時中断し、見直しを行っている`) | `今後も米移民法を遵守するため妊娠検査を継続する方針` — the airline will **continue** the tests |
+| `…438d80a5` | Collection bought for £5,000 is now worth **£40,000+**, with `すでに多くの引き合い` (much buyer interest) | sells `購入価格総額5000ポンドのまま`, and `バイヤーからの引き合いは少なく、思ったような収益は見込めない` — little interest, poor return |
+
+Its clean sibling `…1639e27b` states `対応の即時中断と謝罪を表明した` ✓. So the pair differs
+only in the *direction* of the reported action. No entity or number is wrong. Any check
+based on entity overlap or number matching will pass this candidate.
+
+### NEW failure type: faithful but irrelevant (coverage-only failure)
+
+`…fa255e70` (copy=0.64) is a verbatim passage from deep inside the Antifa article
+explaining **what Antifa is** (`「Anti-Fascist Action」の略語で…指導者のいないゆるやかに
+連携する活動家集団`). Every claim is supported by the source. It is fluent and
+well-formed. And it never mentions the news event — that Trump said he would designate
+Antifa a terrorist organisation.
+
+This is the cleanest possible demonstration that **faithfulness and coverage must be
+separate dimensions**. A faithfulness-only evaluator scores this candidate near-perfect.
+It is arguably the worst summary in its article.
+
+### Permutations confirmed
+
+`…0a1b1dc6`, `…07d482c6`, `…91d615a7` are all the reference with its two sentences
+swapped. In each case the effect is the same: the summary opens on subordinate detail
+(`同社は…釈明している` / `トランプ氏は…非難している` / `高値での取引が見込まれており`) and
+delivers the main event second. Faithful, complete, and badly ordered — a discourse
+failure that no claim-level check will detect.
+
+---
+
+# EXPLORATION SYNTHESIS
+
+## Corruption taxonomy (6 types, all observed)
+
+| type | example | detectable by surface means? |
+|---|---|---|
+| entity swap | ロシア→イラン; テキサス大学→ハーバード大学 | only against the source |
+| number/date swap | 900万→500万クローナ; 19日→15日; 6人→4人 | only against the source |
+| fabricated quotation | `米国はもはや世界の警察ではない` attributed to Trump | no |
+| fabricated event | police confirmed arson, 2 detained | no |
+| hallucinated status | drug "in Phase 3 trials" when trials failed | no |
+| **polarity reversal** | suspended → continuing; high demand → low demand | **no** |
+
+## Quality dimensions the data forces
+
+1. **Faithfulness** — 6 corruption types, none detectable without the source.
+2. **Coverage** — `…fa255e70` is perfectly faithful and useless; misattached candidates
+   are perfectly fluent and about another article entirely.
+3. **Completeness** — 17 truncations, deterministic.
+4. **Selection** — 50 lead extracts carrying captions and bylines; 1 mid-article extract.
+5. **Coherence/order** — 9 permutations, faithful and complete but wrongly ordered.
+
+Format compliance is **not** a dimension: 2/250 violations. Reported as a flag.
+
+## Hypotheses: final status
+
+| hypothesis | status |
+|---|---|
+| dataset is a fixed 4+1 slot template | **CONFIRMED** (arm census, 49/50 articles) |
+| references are a comparison group, not gold | **CONFIRMED** — unsupported claims (37426493), thin coverage (48116477, 45715110), a typo (51145805) |
+| corrupted candidates are single-token swaps | **REFUTED** — up to 3 deltas, and polarity reversals change no token identity |
+| wrong-language output | **DEAD** 0/250 |
+| degenerate repetition | **DEAD** 0/250 |
+| sentence-limit violations are a major mode | **DEAD** 2/250 |
+| a second extractive mode exists | **DEAD** — copy-rate decays smoothly above lead extracts |
