@@ -128,3 +128,67 @@ match is their own article. They are merely highly abstractive. The detector dis
 | reference truncated | 17/50 | completeness |
 | reference permuted | 9/50 | coherence |
 | **misattached (wrong article)** | **16 / 15 articles** | relevance — total coverage failure |
+
+---
+
+## CORRECTION — misattached count is 15, not 16
+
+My first off-topic detector (copy-rate ≤ 0.05 vs own article, then best-matching article
+in the corpus) false-positived on `…519dda6a`. That candidate **is** its article's
+reference verbatim; the reference for `features-and-analysis-42940954` is so abstractive
+that it scores copy=0.048 against its own article body, and a rival article beat it by
+0.002 — noise, not signal.
+
+The fix is ordering: test reference-identity **before** copy-rate. The census below does
+that. Corrected figure: **15 misattached summaries in 15 articles** (one per affected
+article, not two). The seven entries verified by reading in the table above are unaffected.
+
+Worth keeping in the report: this is a concrete example of a cheap structural detector
+producing a confident wrong answer, caught only because the arm census disagreed with it.
+
+---
+
+## FINDING — the construction is a fixed 4+1 template
+
+Structural census over all 250 (`runs/arm_census.json`). Clean vs corrupted abstractive
+cannot be separated structurally and is left as one bucket for the judge.
+
+| arm | n | share |
+|---|---|---|
+| abstractive (clean or corrupted — undetermined) | 101 | 40.4% |
+| reference verbatim | 58 | 23.2% |
+| lead extract (copy=1.00) | 50 | 20.0% |
+| truncation of reference | 17 | 6.8% |
+| misattached (wrong article) | 15 | 6.0% |
+| permutation of reference | 9 | 3.6% |
+
+**Every article has exactly one lead extract and at least one reference (50/50 each).**
+The per-article composition is almost perfectly regular:
+
+| pattern | articles |
+|---|---|
+| reference + lead extract + 2 abstractive + **truncation** | 17 |
+| reference + lead extract + 2 abstractive + **misattached** | 15 |
+| reference + lead extract + 2 abstractive + **permutation** | 9 |
+| reference + lead extract + 2 abstractive + **second reference** | 8 |
+| reference + lead extract + 3 abstractive (no degradation slot) | 1 |
+
+So the generator fills **five slots: reference, lead extract, two abstractive, and one
+variable degradation** drawn from {truncation, misattached, permutation, duplicate
+reference}. This is the single most useful structural fact in the dataset and it was not
+disclosed.
+
+**Consequences for the evaluation.**
+1. Exactly 2 of 5 candidates per article require semantic judgement to separate. The other
+   3 are structurally determined. An evaluator that only got the structural ones right
+   would look deceptively good — reinforcing the need to report baseline comparisons
+   *excluding* structurally-determined candidates.
+2. The abstractive bucket is 101 summaries ≈ 2 per article, presumably ~half clean and
+   ~half corrupted. Only 26 of those pairs are near-twins detectable by surface similarity,
+   so roughly half the corrupted candidates differ from their clean sibling too much for a
+   paired surface test to find. The paired sensitivity test therefore covers about half the
+   faithfulness cases, not all of them — a sharper statement of the selection-bias caveat.
+3. No second extractive mode: within the abstractive bucket, copy-rate decays smoothly and
+   only 7 candidates exceed 0.50. One (`…9e82620f`, copy=0.76) is a genuine mid-article
+   extract that opens on a quote attribution and never states the main finding — a
+   selection failure distinct from lead extraction.
