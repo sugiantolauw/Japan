@@ -1,0 +1,36 @@
+{
+  "article_id": "48116477",
+  "units": [
+    {
+      "unit": "研究チームはアルツハイマー型と似るが異なる新たな認知症LATEを特定した",
+      "excerpt": "LATE（Limbic-predominant age-related TDP-43 encephalopathy、大脳辺縁系優位型老年期TDP-43脳症）と呼ばれるこの症状は、アルツハイマー型認知症と似ているが、異なる病気だという。",
+      "is_main_event": true
+    },
+    {
+      "unit": "アルツハイマー型と診断された患者の最大3分の1が実はLATEである可能性があるという",
+      "excerpt": "今回の研究では、アルツハイマー型と診断された患者の最大で3分の1が、実はLATEである可能性があるとしている。",
+      "is_main_event": false
+    },
+    {
+      "unit": "80歳以上ではLATEの症状が5人に1人の割合で確認された",
+      "excerpt": "LATEは80歳以上が罹患するもので、この年齢グループでは5人に1人の割合で症状が確認された。",
+      "is_main_event": false
+    },
+    {
+      "unit": "研究は認知症患者の死後解剖の結果をもとに行われた",
+      "excerpt": "研究は、認知症患者の死後解剖の結果を基にしている。",
+      "is_main_event": false
+    },
+    {
+      "unit": "英国の専門家はこの論文がここ5年で最も重要な認知症研究かもしれないと評価した",
+      "excerpt": "この論文はここ5年で認知症について発表されたもので最も重要かもしれない",
+      "is_main_event": false
+    }
+  ],
+  "producer": {
+    "role": "keypoints",
+    "model": "claude-sonnet-5",
+    "agent": "keypoints",
+    "run_kind": "primary"
+  }
+}
