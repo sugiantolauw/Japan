@@ -15,15 +15,39 @@ applies to changes I would like to make for good reasons, not only to convenient
 the lawyer's *disclosure* date. Different events, mutually compatible. `20日` is absent
 from the body, so it is UNSUPPORTED, not CONTRADICTED.
 
-### Did it affect any score?
+### Did it affect any score? — **CORRECTED: yes, it did**
 
-Checked, and **no**. A judge agent scoring the perturbation set reported applying "the
+I first concluded it was inert, based only on the perturbation run. **That conclusion was
+wrong.** The full scoring run shows it propagating: batch 0 reported applying "the rubric's
+own worked example (reason = UNSUPPORTED, date 20日 vs actual 19日 = CONTRADICTED)" to both
+candidates of article 37426493 that contain the reference text.
+
+| candidate | arm | faithfulness | claim the judge marked CONTRADICTED |
+|---|---|---|---|
+| `…12ba3116` | reference | **1** | `弁護士は20日にこれを明らかにした` |
+| `…f0038832` | permutation | **1** | `弁護士は20日にこれを明らかにした` |
+
+Under a correct reading both should be **2** (material unsupported detail, nothing
+contradicted). Two of 250 candidates are depressed by one faithfulness point.
+
+**The bias runs in the direction that flatters my own hypothesis.** H6 predicts the
+reference arm does not sweep first place; depressing the reference in this article makes
+H6 easier to pass. The H6 analysis will therefore be reported with and without article
+37426493.
+
+The judge also generalised the pattern to `39776572`, marking `生後1週間を過ぎた` against
+the article's `生後3日` as contradicted. **That generalisation is correct** — same event,
+incompatible timing — so the rule transferred soundly even though the example that taught
+it was wrong.
+
+### Original assessment, retained for the record A judge agent scoring the perturbation set reported applying "the
 rubric's own worked example (date=CONTRADICTED)" as precedent for article 37426493, which
 is what prompted this check. The three perturbation rows for that article derive from
 source candidates `…6baeebc9` and `…9d69dc21`; neither contains `20日`, so the erroneous
 precedent was never applied to the claim it concerns.
 
-The rule the example was illustrating is sound and was applied correctly: a candidate
+The rule the example was illustrating is sound and was applied correctly in the
+perturbation run: a candidate
 asserting a date incompatible with the article's date **for the same event** is
 contradicted. All 26 CONTRADICTED date-bearing claims in batch A are perturbation-induced
 swaps of a date for the same event — genuine contradictions, correctly labelled.
