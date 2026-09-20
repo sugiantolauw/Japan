@@ -268,3 +268,70 @@ Format compliance is **not** a dimension: 2/250 violations. Reported as a flag.
 | degenerate repetition | **DEAD** 0/250 |
 | sentence-limit violations are a major mode | **DEAD** 2/250 |
 | a second extractive mode exists | **DEAD** — copy-rate decays smoothly above lead extracts |
+
+---
+
+## CORRECTION 2 — `20日` is UNSUPPORTED, not CONTRADICTED
+
+I claimed the reference for `37426493` contains one unsupported and one **contradicted**
+claim. The contradiction claim is wrong.
+
+- Reference: `「乗り越えがたい相違」が理由だと、ジョリーさんの弁護士が20日、明らかにした`
+  — the lawyer disclosed the reason **on the 20th**.
+- Body: `ジョリーさんは19日に「結婚解消」の申し立てを提出し` — the petition was **filed on
+  the 19th**.
+
+These are two different events: a filing on the 19th and a lawyer's statement on the 20th.
+Both can be true simultaneously. `20日` does not appear in the body, so it is
+**UNSUPPORTED** (absent), not CONTRADICTED (incompatible). I conflated "a different date
+appears nearby" with "the dates conflict".
+
+Consequence for the record: **I have no verified example of a CONTRADICTED claim in a
+reference.** References demonstrably carry UNSUPPORTED claims; the contradictions in this
+dataset live in the corrupted abstractive arm (entity swaps, number swaps, polarity
+reversals). The UNSUPPORTED/CONTRADICTED distinction in the rubric is still necessary —
+it is what separates the reference arm from the corrupted arm — but the reference arm
+supplies only the unsupported half of that justification.
+
+## FINDING — why references look unfaithful: the body is missing its own lead
+
+45 of 50 articles contain at least one title content-word absent from the body. Reading
+the cases, the reference for `37426493` supplies the subjects' ages (41), (52), the stated
+divorce reason, and the disclosure date — none in the body — while the body opens with a
+photo caption and then continues mid-narrative (`調べによると…`).
+
+The consistent reading: **XL-Sum uses the BBC article's lead paragraph as the reference and
+the `text` field excludes it.** The references are therefore not badly written. They
+summarise material the supplied body omits.
+
+This is an inference about dataset construction, not a measurement. A test I ran —
+fraction of title 5-grams appearing in the reference — came back at median 0.13 and does
+**not** corroborate it, though that test is weak: Japanese headlines are too telegraphic
+to share 5-grams with prose describing the same fact.
+
+**What changes, and what does not.** The evidence boundary stays the supplied title and
+body: a summarizer given only that body cannot know the lead facts, so scoring reference
+candidates as unsupported is the correct standard *for this application*. What changes is
+the interpretation. "XL-Sum references are low quality" was too strong. The accurate
+statement is that they are unsupported **relative to the evidence the summarizer sees**,
+because they answer a question about a fuller article than the one supplied.
+
+## LIMITATION — the coverage yardstick misses title-only main events
+
+The key-point extraction prompt required excerpts verbatim from the article `text`, which
+is narrower than the rubric's evidence boundary of title **plus** body. On articles whose
+main event appears only in the title, the extracted main-event unit is therefore not the
+actual main event:
+
+| article | title states | frozen main-event unit instead covers |
+|---|---|---|
+| `52000333` | clubs and cinemas closed (`映画館` absent from body) | Morrison's stated reason for acting |
+| `53274336` | the athlete's suicide (`自殺` absent from body) | the audio tapes corroborating abuse |
+| `features-and-analysis-40566272` | a feature with no discrete news event | Medicaid cuts under consideration |
+
+Coverage scores on these three articles are measured against a yardstick that omits the
+headline fact. **This is not being fixed.** The key-point prompt is frozen, the defect was
+discovered after the freeze, and changing a frozen input because a post-freeze reading
+suggests it would be better is exactly what the freeze exists to prevent. Instead,
+coverage results will be reported both including and excluding these three articles as a
+sensitivity check, and the affected article ids are recorded here.
