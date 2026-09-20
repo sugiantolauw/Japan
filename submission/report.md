@@ -285,6 +285,42 @@ seeing which one flatters the output is what a freeze prevents.
 The same root cause explains the one structural ordering where the judge underperforms the
 baselines (§3.6): **faithfulness-first rewards saying less.**
 
+### 3.5b Measuring the fix
+
+The defect is reported, so the obvious question is whether an alternative rule is
+demonstrably better rather than merely different. Tested against the orderings that are
+structurally guaranteed and need no human judgement:
+
+| rule | ref > truncation | ref > permutation | anything > misattached | **all** | lead extract 1st |
+|---|---|---|---|---|---|
+| **frozen** (faith→cov→coh→sel) | 14/17 = 82% | 9/9 = 100% | 59/60 = 98% | **95%** | **25/50** |
+| coverage-first (cov→faith→…) | 15/17 = 88% | 9/9 = 100% | 59/60 = 98% | 97% | 8/50 |
+| faith double-weighted sum | 16/17 = 94% | 9/9 = 100% | 59/60 = 98% | 98% | 17/50 |
+| **unweighted sum** | **17/17 = 100%** | 9/9 = 100% | 59/60 = 98% | **99%** | **4/50** |
+
+Mean within-article rank by arm (1 = best of five):
+
+| rule | abstractive | reference | lead extract | permutation | truncation | misattached |
+|---|---|---|---|---|---|---|
+| frozen | 3.01 | 2.79 | **1.76** | 4.11 | 3.82 | 4.93 |
+| coverage-first | 2.60 | 2.57 | 2.76 | 4.00 | 4.12 | 4.93 |
+| **unweighted sum** | 2.34 | **1.98** | 3.18 | 4.11 | 4.41 | 4.93 |
+
+**The unweighted sum dominates on every criterion available.** It is the only rule that
+respects all 17 reference-over-truncation orderings, it has the highest overall structural
+compliance, and it cuts degenerate copies taking first place from 25/50 to 4/50. It also
+produces a monotone severity ordering across arms, which no other rule does.
+
+Two honest caveats. First, under the sum the **reference arm ranks best overall (1.98)**,
+ahead of clean abstractive candidates — the opposite of what exploration suggested, and
+there is no ground truth on that subset to adjudicate it. Second, the sum still places
+**permutations (4.11) below lead extracts (3.18)**, which is questionable: a permuted
+reference contains all the content in the wrong order, while a lead extract often misses
+the main event entirely. No rule tested gets everything right.
+
+`scores.jsonl` carries `within_article_rank` (frozen), `rank_coverage_first` and
+`rank_unweighted_sum` so a reader can apply whichever they find defensible.
+
 ### 3.6 Against the baselines
 
 On orderings that are structurally guaranteed and need no judgement:

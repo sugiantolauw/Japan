@@ -24,13 +24,15 @@ One JSON object per line, 250 rows, joins to `data/summaries.jsonl` on `summary_
 | `structural_arm` | derived from text relations, **not** from the judge |
 | `baseline_a_score`, `baseline_b_score` | the two comparison baselines |
 | `judge_batch` | 0–4; which judge instance scored it. **Needed to interpret cross-article comparisons** — see report §3.4 and limitation 3 |
+| `rank_coverage_first`, `rank_unweighted_sum`, `score_sum` | alternative orderings, see report §3.5b |
 | `rationale` | the judge's own one- or two-sentence justification |
 
 **Use the four dimension scores, not `within_article_rank`.** The frozen ranking rule has a
 known defect (report §3.5): it sorts on faithfulness first, and a verbatim copy of the
 article is maximally faithful, so lead extracts win 24/50 articles. The rank is reported
-because it is what was frozen, not because it is the best ordering. Sort on coverage first
-or use the unweighted sum instead — both are shown in the report.
+because it is what was frozen, not because it is the best ordering. Use `rank_unweighted_sum` instead: it is the only rule tested that respects all 17
+reference-over-truncation orderings, scores highest on overall structural compliance (99%
+vs 95%), and cuts degenerate copies taking first place from 25/50 to 4/50. Report §3.5b.
 
 ## Reproducing
 
