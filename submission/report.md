@@ -242,8 +242,147 @@ Permutations differ from their own reference on coherence alone. Misattached can
 score 0/0/4/4 — faithfulness and coverage floored, coherence and selection intact. Both
 tested on real candidates, not constructed ones.
 
+### 3.4 Full corpus: every arm signature reproduces
+
+| arm | n | faith | cover | coher | select |
+|---|---|---|---|---|---|
+| abstractive | 101 | 2.02 | 2.10 | 4.00 | 3.92 |
+| reference | 58 | 2.60 | 2.00 | 3.97 | 3.93 |
+| lead extract | 50 | **4.00** | 1.82 | 2.82 | **2.14** |
+| truncation | 17 | 2.76 | 1.06 | **1.00** | 3.76 |
+| misattached | 15 | **0.00** | **0.00** | 4.00 | 4.00 |
+| permutation | 9 | 2.00 | 1.89 | **2.11** | 4.00 |
+
+**Determinism (H7): 8/8.** All duplicate-reference pairs received identical score vectors.
+
+**The reference does not sweep (H6): first place in 2/50 articles.**
+
+### 3.5 The ranking rule is broken, and the sensitivity analysis says so
+
+A verbatim copy cannot be unfaithful. Lead extracts score faithfulness **4.00 in every
+batch without exception**, while genuine abstractive candidates risk 0–2. Under a
+lexicographic rule with faithfulness first, the copy wins before any other dimension is
+read — lead extracts take first place in **24 of 50** articles, usually while scoring worse
+on the other three.
+
+| rule | first place |
+|---|---|
+| faith → cover → coher → select *(frozen)* | **lead extract 24**, abstractive 24, reference 2 |
+| faith → cover → select → coher | lead extract 25, abstractive 23 |
+| cover → faith → coher → select | abstractive **39**, lead extract 7 |
+| unweighted sum | abstractive **42**, lead extract **2** |
+
+**A dimension with a degenerate optimum must not be the primary sort key.** Faithfulness
+is maximised at zero effort by copying. Selection was designed to catch that — it scores
+lead extracts 2.14 against 3.9+ elsewhere — but lexicographic ordering never consults it
+when faithfulness differs. I placed the exploitable dimension first and its antidote last.
+
+I rejected a weighted sum because *"it lets polished writing offset a factual error."* The
+real failure runs the other way, and the unweighted sum is the best of the four rules
+tested. **The rule is frozen and was not changed** — swapping an aggregation rule after
+seeing which one flatters the output is what a freeze prevents.
+
+The same root cause explains the one structural ordering where the judge underperforms the
+baselines (§3.6): **faithfulness-first rewards saying less.**
+
+### 3.6 Against the baselines
+
+On orderings that are structurally guaranteed and need no judgement:
+
+| ordering | n | judge | structural baseline | reference-similarity |
+|---|---|---|---|---|
+| reference > its truncation | 17 | 82% | 100% | 100% |
+| reference > its permutation | 9 | **100%** | **0%** | 100% |
+| anything > misattached | 60 | **98%** | 67% | 93% |
+
+And on discrimination within the 101 abstractive candidates — the only ones needing
+semantic judgement:
+
+| scorer | articles where it cannot separate its abstractive candidates |
+|---|---|
+| structural baseline | **50 / 50** |
+| reference similarity | 1 / 50 |
+| LLM judge | **0 / 50** |
+
+**H4 holds:** the structural baseline has literally zero ranking power where judgement is
+required, and is blind to sentence reordering (0%). **H5 is only half-answered.** Reference
+similarity discriminates and tracks the structural orderings well — but it does so by
+scoring exactly 1.0 on all 58 reference candidates by construction, which is an answer key,
+not a metric. On the abstractive subset there is **no ground truth**, so I can report that
+the judge and the similarity baseline rank differently, not which ranks better.
+
+### 3.7 Length bias (H8): partially fails, as suspected
+
+| dimension | all 250 | abstractive only |
+|---|---|---|
+| faithfulness | +0.24 | +0.13 |
+| **coverage** | **+0.31** | **+0.43** |
+| coherence | +0.01 | 0.00 |
+| selection | −0.47 | −0.10 |
+
+Coverage correlates with length even within a single arm. Some of that is legitimate — a
+longer summary genuinely can convey more units — but the size of it means **coverage
+scores cannot be read as independent of length**, and I cannot separate the legitimate part
+from the bias with this design.
+
 ## 4. Limitations
 
-*Pending.* Known entries: no native-speaker validation was performed (see README);
-constructed ground truth covers 3 of the 6 observed corruption types; the structural
-detectors were derived before the split existed and are therefore not held out.
+Ordered by how much they should change a reader's confidence.
+
+**1. The ranking rule is wrong, and I know it is.** §3.5. Lead extracts win 24/50 articles
+under the frozen rule because copying maximises faithfulness. The per-dimension scores are
+sound; the aggregation into a single order is not. A reader should use the dimension
+vector, not `within_article_rank`. The fix is to sort on coverage first or to use the
+unweighted sum, both of which are shown.
+
+**2. Faithfulness is a four-point scale, not five.** The frozen score-2 anchor's own
+example (*an unstated date, a descriptor*) is precisely the immaterial case that defines
+score 3, so raters route everything to one side. Two batches produced zero 3s; one produced
+eleven 3s and zero 2s. The same candidate class is scored ~1 point apart depending on which
+batch it landed in. Details: `runs/KNOWN_ERRORS.md` E4.
+
+**3. Cross-article aggregates carry a rater effect of up to 2.3 points.** Five independent
+judge instances scored ten articles each. They agree *exactly* where the answer is forced
+(lead extract 4.0, misattached 0.0, zero spread in all five batches) and diverge on the
+graded middle. Within-article rankings are immune — one rater scores all five candidates —
+but every per-arm mean in §3.4 mixes rater variance with signal.
+
+**4. No native-speaker validation.** I do not read Japanese. Validation rests on
+constructed ground truth, structurally guaranteed relations, internal consistency, and
+mechanical auditing of cited evidence. None of it establishes whether the judge's sense of
+a *good* Japanese summary matches a native reader's, or whether the extracted key points
+are the right essential facts. See README.
+
+**5. Constructed ground truth covers 3 of 6 corruption types.** Fabricated quotation,
+fabricated event and hallucinated status require generating false content rather than
+substituting a verified span, so they have no scripted ground truth and rest on the
+natural pairs and structural anchors.
+
+**6. Date corruptions are detected at 64% against 100% for entities and quantities.** The
+most actionable operational limit. Plausibly correct calibration to a source whose lead
+paragraph is missing — but a user should not trust this evaluator on dates.
+
+**7. Coverage is length-correlated (+0.43 within arm).** §3.7.
+
+**8. Three articles have a coverage yardstick that misses their main event**, because the
+key-point prompt required body-verbatim excerpts while the rubric's evidence boundary is
+title *plus* body. `runs/KNOWN_ERRORS.md` E2.
+
+**9. The frozen rubric contains a factual error that changed two scores.** The worked
+example labels a compatible date pair as contradicted; two candidates in one article are
+depressed by one faithfulness point, in the direction that flatters H6. E1.
+
+**10. Structural detectors are not held out.** They were derived from full-dataset
+inspection before the split existed. Only the semantic judge is genuinely held out.
+
+### What I would do next, in order
+
+1. Re-run with coverage as the primary sort key and compare rankings — one hour, and it
+   addresses the largest defect.
+2. Fix the faithfulness anchor contradiction and re-score; measure how much of the 2.3-point
+   rater spread it was causing.
+3. Get 3–5 articles reviewed by a Japanese reader — not as ground truth, but to check
+   whether the evaluator is confidently wrong in a way all four automated lines miss
+   together.
+4. Extend constructed ground truth to fabrication types using a generator rather than a
+   substituter.

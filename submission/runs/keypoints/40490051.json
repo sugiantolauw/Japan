@@ -1,0 +1,7 @@
+{"article_id":"40490051","units":[
+{"unit":"ISはモスル旧市街で女性による自爆攻撃を増やして抵抗している","excerpt":"しかし、ISは一部女性による自爆攻撃を増やして抵抗している。","is_main_event":true},
+{"unit":"モスル奪還作戦は昨年10月に始まった","excerpt":"モスル奪還作戦は昨年10月に始まった。","is_main_event":false},
+{"unit":"イラク軍はモスル市内に残るIS戦闘員は300人を超えないと考えている","excerpt":"イラク軍はモスル市内に残っているIS戦闘員は300人を超えないと考えている。","is_main_event":false},
+{"unit":"3日には女性による自爆攻撃が2回起き7人が阻止された","excerpt":"3日には女性による自爆攻撃が2回起きた。このほか7人の女性が自爆装置を身に着けて兵士らに近づこうとしたものの、阻止されている。","is_main_event":false},
+{"unit":"国連はISが10万人以上のモスル住民を人間の盾にしている可能性があると指摘した","excerpt":"国連はISが10万人以上のモスル住民を「人間の盾」としている可能性があると指摘した。","is_main_event":false}
+],"producer":{"role":"keypoints","model":"claude-sonnet-5","agent":"keypoints","run_kind":"primary"}}

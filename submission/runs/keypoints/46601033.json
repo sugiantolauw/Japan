@@ -1,0 +1,36 @@
+{
+  "article_id": "46601033",
+  "units": [
+    {
+      "unit": "ホームレス28人の宿泊予約をロイヤル・ホテルが拒否し批判を浴びた",
+      "excerpt": "プロジェクトに参加する28人のホームレスの人は当初、市内のロイヤル・ホテルに泊まる予定だったが、ホテル側が宿泊を拒否し、批判を浴びた。",
+      "is_main_event": true
+    },
+    {
+      "unit": "ダブルツリー・ヒルトンがクリスマスディナー付きでホームレス28人を無料で受け入れると申し出た",
+      "excerpt": "その後、ダブルツリー・ヒルトンがクリスマス・ディナー付きでホームレスを受け入れると申し出た。",
+      "is_main_event": false
+    },
+    {
+      "unit": "ロイヤル・ホテルは前年に客室が破損したとの報告を理由に受け入れを拒否したと説明した",
+      "excerpt": "昨年のこの企画ではアイビス・ホテルの客室に破損があったという報告を受けて、受け入れを拒否したと話した。",
+      "is_main_event": false
+    },
+    {
+      "unit": "主催団体はホテル側が主張する客室破損の疑惑をうそだと否定した",
+      "excerpt": "企画の主催団体「Raise the Roof Hull Homeless Project（ハルのホームレスに屋根を）」は、この疑惑は「うそ」だと批判。",
+      "is_main_event": false
+    },
+    {
+      "unit": "予約拒否の投稿が拡散し9000ポンド以上の寄付が集まった",
+      "excerpt": "この投稿は1500人以上の人々にシェアされ、「Raise the Roof Homeless Project」には9000ポンド以上の寄付金が集まった。",
+      "is_main_event": false
+    }
+  ],
+  "producer": {
+    "role": "keypoints",
+    "model": "claude-sonnet-5",
+    "agent": "keypoints",
+    "run_kind": "primary"
+  }
+}
