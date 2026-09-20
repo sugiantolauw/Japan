@@ -78,3 +78,101 @@ Three times now my own measurement has been the thing at fault: the misattached 
 (16→15), P3's assumption that natural near-twin pairs are minimal, and this specificity
 detector. The judge has been wrong less often than my tests for it. That is worth stating
 in a report about trusting evaluation signals.
+
+---
+
+# Full-corpus results — 250 candidates, frozen v1.2
+
+## Mean score by arm (judge blind to arm throughout)
+
+| arm | n | faithfulness | coverage | coherence | selection |
+|---|---|---|---|---|---|
+| abstractive | 101 | 2.02 | 2.10 | 4.00 | 3.92 |
+| reference | 58 | 2.60 | 2.00 | 3.97 | 3.93 |
+| lead extract | 50 | **4.00** | 1.82 | 2.82 | **2.14** |
+| truncation | 17 | 2.76 | 1.06 | **1.00** | 3.76 |
+| misattached | 15 | **0.00** | **0.00** | 4.00 | 4.00 |
+| permutation | 9 | 2.00 | 1.89 | **2.11** | 4.00 |
+
+Every arm signature predicted from structure is reproduced by a judge that never saw the
+arms: misattached floored on both fact dimensions while fluent, truncation floored on
+coherence, permutation depressed on coherence alone, lead extract maximal on faithfulness
+and minimal on selection.
+
+## H7 — Determinism: **PASS, 8/8**
+
+All eight duplicate-reference pairs received **identical score vectors**. Byte-identical
+input, independent judgements, no shared cache. Within-rater determinism is exact.
+
+## H6 — The reference arm does not sweep: **PASS, but not for the predicted reason**
+
+The reference takes first place in **2 of 50** articles (unchanged at 2/49 excluding the
+E1-affected article). But it is crowded out by **lead extracts (24/50)**, not by clean
+abstractive candidates (24/50) as I assumed. That leads directly to the next result.
+
+## THE RANKING RULE IS BROKEN — and the sensitivity analysis says so
+
+**A verbatim copy of the article cannot be unfaithful.** Lead extracts score faithfulness
+**4.00 in every batch, without exception**. Genuinely abstractive candidates risk 0–2
+because they restate rather than copy. Under a lexicographic rule with faithfulness as the
+primary key, the copy wins before any other dimension is consulted.
+
+Article `34991666`, ranked under the frozen rule:
+
+| rank | arm | (faith, cover, coher, select) |
+|---|---|---|
+| **1** | **lead extract** | **(4, 2, 3, 3)** |
+| 2 | reference | (2, **3**, **4**, **4**) |
+| 3 | abstractive | (2, 2, **4**, **4**) |
+
+The winner is worse on three of four dimensions. It wins on one, and that one sorts first.
+
+### Sensitivity to the ordering (pre-registered)
+
+| rule | first place |
+|---|---|
+| faith → cover → coher → select *(frozen)* | **lead extract 24**, abstractive 24, reference 2 |
+| faith → cover → select → coher | lead extract 25, abstractive 23, reference 2 |
+| **cover → faith** → coher → select | abstractive **39**, lead extract 7, reference 4 |
+| **unweighted sum of all four** | abstractive **42**, reference 6, lead extract **2** |
+
+Swapping the middle two changes nothing — the failure is entirely in which dimension sorts
+first. Both alternatives produce far more defensible rankings.
+
+### The diagnosis
+
+**A dimension with a degenerate optimum must not be the primary sort key.** Faithfulness is
+maximised at zero effort by copying the source. Selection was the dimension designed to
+catch exactly that — it scores lead extracts 2.14 against 3.9+ everywhere else — but under
+lexicographic ordering **selection is never consulted when faithfulness differs.** I put
+the exploitable dimension first and its antidote last.
+
+### I rejected the right rule for the wrong reason
+
+I dismissed a weighted sum on the grounds that *"it lets polished writing offset a factual
+error."* The real failure runs the other way: lexicographic faithfulness-first lets a
+**trivial copy beat every genuine summary**. The unweighted sum I rejected produces the
+most sensible ranking of the four rules tested — lead extracts drop from 24 first places
+to 2.
+
+The rule is frozen and is **not** being changed; the frozen result stands as the headline
+number, with this sensitivity analysis reported beside it. Changing the aggregation rule
+after seeing which one flatters the output is precisely what a freeze exists to prevent.
+
+## Rater effect between batches
+
+Arm-conditional mean faithfulness, by batch:
+
+| arm | b0 | b1 | b2 | b3 | b4 | spread |
+|---|---|---|---|---|---|---|
+| lead extract | 4.0 | 4.0 | 4.0 | 4.0 | 4.0 | **0.0** |
+| misattached | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | **0.0** |
+| abstractive | 1.6 | 2.2 | 2.4 | 1.8 | 2.0 | 0.8 |
+| permutation | 1.5 | 2.0 | — | 2.0 | 2.2 | 0.8 |
+| reference | 2.1 | 2.8 | 3.2 | 2.2 | 2.6 | 1.1 |
+| truncation | 2.5 | 1.0 | 3.0 | 2.8 | 3.3 | **2.3** |
+
+Raters agree **exactly** where the answer is forced — a copy is faithful, a wrong-article
+summary is not — and diverge by up to 2.3 points on the graded middle, driven by the E4
+anchor contradiction. Any cross-article aggregate above carries that spread; the
+within-article rankings do not, since one rater scores all five candidates in an article.
