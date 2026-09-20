@@ -202,8 +202,45 @@ tie.
 
 ## 3. Validation
 
-*Pending the frozen run. Design and interim results: `runs/PILOT_RESULTS.md`,
-`runs/PREDICTIONS.md`, `runs/perturbation_report.md`.*
+Full results: `runs/VALIDATION_RESULTS.md`. Hypotheses were registered before any result
+existed (`runs/PREDICTIONS_v2.md`).
+
+### 3.1 Constructed ground truth
+
+137 scripted perturbations judged blind under the frozen rubric — the judge was told some
+texts were altered and some were not, and not told which. 607 claims, 508 evidence
+strings, **0 verbatim failures**. Detection required the judge to flag a CONTRADICTED
+claim *naming the substituted value*, not merely to score the candidate low.
+
+| corruption | detected | 95% CI |
+|---|---|---|
+| entity swap | 40/40 = 100% | [91%, 100%] |
+| quantity swap | 18/18 = 100% | [82%, 100%] |
+| polarity reversal | 20/24 = 83% | [64%, 93%] |
+| **date swap** | **14/22 = 64%** | [43%, 80%] |
+
+**Specificity: 0/33.** The 33 meaning-preserving controls produced no false contradiction,
+and coherence and selection on the 104 corruptions stayed at 3.99 and 3.96 — the
+perturbations changed facts, and only the fact-sensitive dimension moved.
+
+### 3.2 The prediction that failed
+
+I predicted polarity reversal would be hardest, since it changes no token identity.
+Wrong — **date swaps are the weak point, and every one of the eight missed number swaps is
+a date**. Quantities are caught 18/18.
+
+The likely reason is specific to this dataset: the article body is missing its own lead
+paragraph, so a date absent from the body genuinely may have been stated in text the judge
+was never shown. The judge hedges to UNSUPPORTED rather than committing to CONTRADICTED,
+which may be correct calibration to a source it knows is incomplete. Either way, **this
+evaluator should not be trusted to catch a wrong date at the rate it catches a wrong name
+or number.**
+
+### 3.3 Dimension independence, on natural data
+
+Permutations differ from their own reference on coherence alone. Misattached candidates
+score 0/0/4/4 — faithfulness and coverage floored, coherence and selection intact. Both
+tested on real candidates, not constructed ones.
 
 ## 4. Limitations
 
