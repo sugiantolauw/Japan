@@ -10,6 +10,8 @@
 | `scores.jsonl` | 250 rows, one per `summary_id` |
 | `code/` | everything used to produce the scores and the validation |
 | `runs/` | all intermediate artifacts, including every judge verdict |
+| `.claude/agents/` | the pinned-model subagent definitions |
+| `annotations/packets/` | the blind review packet, built then left unused (see below) |
 
 ## `scores.jsonl` schema
 
@@ -37,6 +39,11 @@ vs 95%), and cuts degenerate copies taking first place from 25/50 to 4/50. Repor
 ## Reproducing
 
 Python 3.11, standard library only. No third-party packages, no `requirements.txt` needed.
+
+**Reproducibility is verified, not just claimed.** Re-running all three deterministic
+scripts from scratch produces **byte-identical** output to what is committed
+(`perturbations.jsonl`, `baselines.jsonl`, `human_review_selection.json` all diff clean
+against seed 20260918).
 
 ```bash
 # verification — runs against the committed artifacts, no model calls
