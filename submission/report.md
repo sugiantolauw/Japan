@@ -262,12 +262,12 @@ tested on real candidates, not constructed ones.
 A verbatim copy cannot be unfaithful. Lead extracts score faithfulness **4.00 in every
 batch without exception**, while genuine abstractive candidates risk 0–2. Under a
 lexicographic rule with faithfulness first, the copy wins before any other dimension is
-read — lead extracts take first place in **24 of 50** articles, usually while scoring worse
+read — lead extracts take first place in **25 of 50** articles (24 outright, 1 tied), usually while scoring worse
 on the other three.
 
 | rule | first place |
 |---|---|
-| faith → cover → coher → select *(frozen)* | **lead extract 24**, abstractive 24, reference 2 |
+| faith → cover → coher → select *(frozen)* | **lead extract 24**, abstractive 24, reference 2 (outright winners; tie-aware, a lead extract shares first in 25) |
 | faith → cover → select → coher | lead extract 25, abstractive 23 |
 | cover → faith → coher → select | abstractive **39**, lead extract 7 |
 | unweighted sum | abstractive **42**, lead extract **2** |
