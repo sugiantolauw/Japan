@@ -1,5 +1,19 @@
 # Evaluating a Japanese News Summarizer
 
+**What this evaluation establishes.** The dataset is built on a fixed template that I
+recovered from text relations alone, which means only 2 of 5 candidates per article need
+semantic judgement. Against corruptions I scripted myself — so the answer is known, not
+annotated — the evaluator catches **100% of entity and quantity swaps**, penalises **none**
+of 33 meaning-preserving paraphrases, scores byte-identical candidates identically **8/8**,
+and reproduces every structural failure signature while blind to which candidate is which.
+
+**What it does not.** It catches wrong dates at only **64%**. There is no ground truth for
+ranking the 101 candidates that genuinely need judgement, so I can show my evaluator
+disagrees with a cheap baseline there but not that it is right. And my own aggregation rule
+is wrong: it ranks a verbatim copy of the article first in half the articles, because a
+copy cannot be unfaithful. I measured which alternative fixes that and did not change the
+frozen rule.
+
 Detail behind every number is in `runs/`; this is the argument.
 
 ## 1. Exploration
