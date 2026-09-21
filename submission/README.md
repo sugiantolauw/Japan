@@ -29,12 +29,15 @@ One JSON object per line, 250 rows, joins to `data/summaries.jsonl` on `summary_
 | `rank_coverage_first`, `rank_unweighted_sum`, `score_sum` | alternative orderings, see report §3.4 |
 | `rationale` | the judge's own one- or two-sentence justification |
 
-**Use the four dimension scores, not `within_article_rank`.** The frozen ranking rule has a
-known defect (report §3.5): it sorts on faithfulness first, and a verbatim copy of the
-article is maximally faithful, so lead extracts win 24/50 articles. The rank is reported
-because it is what was frozen, not because it is the best ordering. Use `rank_unweighted_sum` instead: it is the only rule tested that respects all 17
-reference-over-truncation orderings, scores highest on overall structural compliance (99%
-vs 95%), and cuts degenerate copies taking first place from 25/50 to 4/50. Report §3.4.
+**The four dimension scores are the primary result. Every overall rank is exploratory.**
+
+The frozen rule has a known defect (report §3.4): it sorts faithfulness first, and a
+verbatim copy cannot be unfaithful, so a lead extract is ranked first in 25 of 50 articles.
+`rank_unweighted_sum` satisfies more of the expected structural orderings — but "satisfies
+more structural priors" is not the same as "is correct", and **no rule here has independent
+quality labels behind it**. All three ranks are shipped as a sensitivity analysis, not as
+an answer. If you need a single ordering, `rank_unweighted_sum` is the least bad one
+tested; treat it accordingly.
 
 ## Reproducing
 
@@ -46,8 +49,13 @@ scripts from scratch produces **byte-identical** output to what is committed
 against seed 20260918).
 
 ```bash
+# rebuild and validate the deliverable from the saved judge verdicts
+python3 code/assemble_scores.py           # regenerates scores.jsonl
+python3 code/validate_submission.py       # 250 rows, ranges, join integrity
+python3 code/analyze_results.py           # recomputes every table in report.md
+
 # verification — runs against the committed artifacts, no model calls
-python3 code/provenance_check.py          # each output came from its assigned model
+python3 code/provenance_check.py          # checks declared producer metadata (see caveat below)
 python3 code/verify_keypoints.py          # key points: 3-6 units, verbatim excerpts, one main event
 python3 code/verify_judge.py runs/judge/all_b0.jsonl   # every cited excerpt is verbatim in its article
 
@@ -78,16 +86,21 @@ applied it, and validated the result:
 Every judge instance was **blind**: given the rubric, the article and one candidate, and
 explicitly denied the `reference_summary` field, the structural arm census, the
 predictions file, the perturbation answers, and every other judge's output.
-`code/provenance_check.py` enforces the role→model mapping on every output row.
+`code/provenance_check.py` checks the **declared** producer metadata on every output row
+against the role→model mapping. It cannot verify which model actually ran — it detects
+misrouted or unstamped output, not a dishonest stamp.
 
-**Decisions that were mine:** the four dimensions and their anchors; the evidence boundary;
-the lexicographic rule (and its defect); the split and freeze discipline; every hypothesis
-in `runs/PREDICTIONS*.md` and the decision to record failures rather than amend them; the
-choice to validate through constructed ground truth given that I do not read Japanese; and
-every decision not to fix a frozen artifact after the freeze.
+**Division of labour, stated plainly.** Claude proposed and implemented the exploration,
+the rubric, the experiments, the scoring runs and the first draft of this report. My role
+was to direct and interrogate it: I set the scope, pushed back on conclusions, chose to
+freeze rather than keep tuning, commissioned an independent review of the finished package,
+and required the corrections that followed — the invalid date labels, the overstated
+paraphrase claim, the untested rater-effect claim, and the reproducibility defects. Where
+the report says a claim was withdrawn or softened, that happened because the work was
+challenged, not because it was right the first time.
 
-**AI-assisted:** all Japanese-language judgement, the perturbation substitution and antonym
-tables, the key-point propositions, and the analysis code.
+The design decisions are ones I reviewed and approved rather than originated
+unaided. The submission and its limitations are my responsibility.
 
 **A note on the human review.** I do not read Japanese, so no native-speaker validation was
 performed. A blind review packet was built (`runs/human_review*.json`,

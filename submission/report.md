@@ -2,9 +2,9 @@
 
 **What this evaluation establishes.** The dataset is built on a fixed template that I
 recovered from text relations alone, which means only 2 of 5 candidates per article need
-semantic judgement. Against corruptions I scripted myself — so the answer is known, not
-annotated — the evaluator catches **100% of entity and quantity swaps**, penalises **none**
-of 33 meaning-preserving paraphrases, scores byte-identical candidates identically **8/8**,
+semantic judgement. Against corruptions I scripted myself, on the subset whose labels survived a
+semantic audit — the evaluator catches **100% of entity and quantity swaps**, raises no contradiction attributable to a
+meaning-preserving edit, scores byte-identical candidates identically **8/8**,
 and reproduces every structural failure signature while blind to which candidate is which.
 
 **What it does not.** **My date-detection labels turned out to be invalid** and the 64% figure they produced is
@@ -39,13 +39,15 @@ Three relations are computable with no model (`runs/arm_census.json`):
 Every article holds **one reference, one lead extract, two abstractive candidates, and one
 variable degradation**. 49 of 50 fit exactly.
 
-**Consequence that shapes everything: only 2 of 5 candidates per article need semantic
-judgement.** The other three are determined by string relations, so any baseline comparison
-over all candidates measures the wrong thing (§3.6).
+**Consequence that shapes everything: two candidates per article are structurally
+undetermined.** The other three are *identifiable* from string relations — which gives a
+diagnostic hypothesis about each, not a quality score; they still need semantic evaluation.
+Either way, a baseline comparison over all candidates measures partly the wrong thing.
 
 The misattached arm matters beyond its 6%: Finnish paternity leave filed under Iraqi
 forces at Mosul, yoghurt sugar content under the Oscars. These are fluent, well-formed and
-faithful — to some *other* article. Any reference-free quality metric scores them highly.
+faithful — to some *other* article. Any **source-free** metric may score them highly. (My evaluator is reference-free but
+source-grounded, which is the distinction that matters.)
 
 ### 1.2 The references are candidates, and they are not ground truth
 
@@ -60,7 +62,8 @@ They are unsupported *relative to the evidence a summarizer sees*, which is the 
 standard here but is not evidence they are poor. (An inference about construction, not a
 measurement.)
 
-**This disqualifies reference-based metrics.** Measured: a reference-similarity baseline
+**This makes reference similarity unsuitable as the sole metric on this dataset.**
+Measured: a reference-similarity baseline
 scores exactly 1.0 on all 58 reference candidates — an answer key, not a metric.
 
 ### 1.3 Six corruption types, none surface-detectable
@@ -181,8 +184,10 @@ correct calibration. The audit turns that speculation into a mechanism — and s
 fault from the judge to my test. The corruption types with sound labels are detected at
 **95%**.
 
-**Specificity, stated precisely.** No meaning-preserving control produced a false
-contradiction naming the paraphrase (**0/33**), and coherence and selection on the
+**Specificity, stated precisely.** Three of 33 controls carry a contradicted claim whose text contains the edited token, but
+in all three the falsity **predates the edit** (fabricated arson; a reversed dissolution
+announcement; three wrong figures) — so **no contradiction is attributable to the
+paraphrase**. Coherence and selection on the
 corruptions stayed at **3.99 and 3.96**. But that is a claim-label test, not score
 stability. Comparing each control against its own original, faithfulness is **unchanged in
 only 15/33** — 12 up, 6 down. Two caveats pull in opposite directions: the two runs used
@@ -217,13 +222,20 @@ A verbatim copy cannot be unfaithful. Lead extracts score faithfulness **4.00 in
 batch without exception**. Under faithfulness-first ordering they take first place in
 **25 of 50** articles, usually while scoring worse on the other three.
 
-Tested against orderings that are structurally guaranteed and need no judgement:
+Tested against **expected** structural orderings — a reference should beat its own
+truncation and its own permutation, and anything should beat a summary of another article.
+These are strong priors, not guarantees: a truncation is not automatically worse in every
+semantic respect.
 
 | rule | ref > truncation | ref > permutation | any > misattached | **all** | lead extract 1st |
 |---|---|---|---|---|---|
-| **frozen** faith→cov→coh→sel | 14/17 = 82% | 9/9 | 59/60 | **95%** | **25/50** |
-| coverage-first | 15/17 = 88% | 9/9 | 59/60 | 97% | 8/50 |
-| **unweighted sum** | **17/17 = 100%** | 9/9 | 59/60 | **99%** | **4/50** |
+| **frozen** faith→cov→coh→sel | 14/17 = 82% | 9/9 | 59/60 | **95%** | **25** (sole 24) |
+| coverage-first | 15/17 = 88% | 9/9 | 59/60 | 97% | 8 (sole 7) |
+| **unweighted sum** | **17/17 = 100%** | 9/9 | 59/60 | **99%** | **4** (sole 2) |
+
+Last column: articles where a lead extract is ranked first, counting ties; sole-winner
+counts in brackets. The sum also produces far more ties at first place (11 articles vs 3),
+which is part of why it looks tidier and is itself a reason not to treat it as definitive.
 
 Mean within-article rank by arm under the sum: reference 1.98, abstractive 2.34, lead
 extract 3.18, permutation 4.11, truncation 4.41, misattached 4.93 — a monotone severity

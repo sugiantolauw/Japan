@@ -40,7 +40,10 @@ the article's `生後3日` as contradicted. **That generalisation is correct** �
 incompatible timing — so the rule transferred soundly even though the example that taught
 it was wrong.
 
-### Original assessment, retained for the record A judge agent scoring the perturbation set reported applying "the
+### Original assessment — OBSOLETE, retained only to show what was corrected
+
+Everything in this subsection was written before the full scoring run and is **wrong**;
+the corrected finding is above. A judge agent scoring the perturbation set reported applying "the
 rubric's own worked example (date=CONTRADICTED)" as precedent for article 37426493, which
 is what prompted this check. The three perturbation rows for that article derive from
 source candidates `…6baeebc9` and `…9d69dc21`; neither contains `20日`, so the erroneous
@@ -131,8 +134,9 @@ proportionality; this is the single biggest judgment call in the batch and affec
 ## Why E4 and E5 do not invalidate the deliverable
 
 Both are **between-rater** effects. Each article's five candidates are scored by one agent
-in one context, so a rater's threshold shifts all five together and **cancels in the
-within-article ranking** — which is what the lexicographic rule produces and what the task
+in one context, so a rater's threshold shifts all five together. I claimed this **cancels
+in the within-article ranking**; E7 below corrects that — it is attenuated, not
+eliminated, and was never tested — which is what the lexicographic rule produces and what the task
 asks for.
 
 They do contaminate **cross-article aggregates**: any "mean faithfulness by arm" computed
@@ -194,3 +198,43 @@ from the repo root, so it passed while the packaged submission was broken — **
 the wrong thing.** Fixed to resolve from `__file__`; `arm_census.json` and `split.json`
 moved into `runs/`. All five scripts now run from `submission/` and reproduce
 byte-identical output.
+
+## E10 — Rank counts mixed two incompatible definitions (second review)
+
+The report quoted 24, 25, 2 and 3 for "first place" across sections. Those came from
+`argmax`, which returns one winner even when several tie — so they were neither
+"rank-1 including ties" nor "sole winner", but an incoherent third thing.
+
+Correct counts, both definitions, from `code/analyze_results.py`:
+
+| rule | rank-1 incl. ties | sole winner | articles tied at first |
+|---|---|---|---|
+| frozen | extract 25, abstractive 25, reference 3 | extract 24, abstractive 22, reference 1 | 3 |
+| coverage-first | abstractive 40, extract 8, reference 7 | abstractive 35, extract 7, reference 3 | 5 |
+| unweighted sum | abstractive 47, reference 11, extract 4 | abstractive 34, reference 3, extract 2 | 11 |
+
+The sum produces far more ties at first place (11 vs 3), which is part of why it looks
+tidier — and a further reason not to treat it as the definitive ordering.
+
+## E11 — Superseded results were left in place
+
+`runs/VALIDATION_RESULTS.md` still carried the withdrawn date figure, an H1 total computed
+over invalid labels, and the "immune to rater effects" claim, all contradicting the revised
+report. Now carries a supersession banner naming each. `runs/KNOWN_ERRORS.md` carried both
+an obsolete "the error was inert" conclusion and the superseded "rater effects cancel"
+claim; both are now marked obsolete in place rather than deleted, so the correction is
+visible.
+
+## E12 — The README claimed code that did not exist
+
+It said `code/` contained "everything used to produce the scores and the validation".
+`scores.jsonl` was assembled, and every report table computed, in ad-hoc shell sessions
+that were never committed. Added `assemble_scores.py`, `validate_submission.py` and
+`analyze_results.py`; all three run from either the repo root or the packaged submission
+and regenerate the deliverable and every reported figure.
+
+## E13 — provenance_check.py was described as more than it is
+
+Described as enforcing "each output came from its assigned model". It checks the
+**declared** producer metadata. It detects misrouted or unstamped output; it cannot verify
+which model actually ran. Description corrected.

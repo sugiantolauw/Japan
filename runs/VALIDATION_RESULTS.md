@@ -1,3 +1,13 @@
+> **SUPERSEDED IN PART.** Written before the external review. Three results below are
+> withdrawn or corrected; `submission/report.md` and `runs/KNOWN_ERRORS.md` are
+> authoritative.
+>
+> - the date row (14/22 = 64%) is **withdrawn** — the labels are invalid (E6). Detection
+>   on audited labels is 78/82 = 95%.
+> - "H1 92/104" includes those invalid date labels; the audited figure is 78/82.
+> - "within-article rankings are immune to rater effects" is **unvalidated** (E7).
+> - "specificity 0/33" is a claim-label result, not score stability (E8).
+
 # Validation results — constructed ground truth
 
 137 perturbations, judged blind under frozen rubric v1.2. The judge saw only
