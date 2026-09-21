@@ -26,7 +26,7 @@ One JSON object per line, 250 rows, joins to `data/summaries.jsonl` on `summary_
 | `structural_arm` | derived from text relations, **not** from the judge |
 | `baseline_a_score`, `baseline_b_score` | the two comparison baselines |
 | `judge_batch` | 0–4; which judge instance scored it. **Needed to interpret cross-article comparisons** — see report §3.4 and limitation 3 |
-| `rank_coverage_first`, `rank_unweighted_sum`, `score_sum` | alternative orderings, see report §3.5b |
+| `rank_coverage_first`, `rank_unweighted_sum`, `score_sum` | alternative orderings, see report §3.4 |
 | `rationale` | the judge's own one- or two-sentence justification |
 
 **Use the four dimension scores, not `within_article_rank`.** The frozen ranking rule has a
@@ -34,7 +34,7 @@ known defect (report §3.5): it sorts on faithfulness first, and a verbatim copy
 article is maximally faithful, so lead extracts win 24/50 articles. The rank is reported
 because it is what was frozen, not because it is the best ordering. Use `rank_unweighted_sum` instead: it is the only rule tested that respects all 17
 reference-over-truncation orderings, scores highest on overall structural compliance (99%
-vs 95%), and cuts degenerate copies taking first place from 25/50 to 4/50. Report §3.5b.
+vs 95%), and cuts degenerate copies taking first place from 25/50 to 4/50. Report §3.4.
 
 ## Reproducing
 
@@ -103,12 +103,16 @@ rather than quietly fixed, because several were found after the freeze.
 
 ## Honest summary of what this evaluation does and does not establish
 
-**Established.** The judge detects scripted entity and quantity corruptions at 100%, does
-not penalise meaning-preserving paraphrase (0/33 false positives), scores byte-identical
+**Established.** The judge detects scripted corruptions at 95% overall on labels that
+survive a semantic audit — entity and quantity swaps at 100% — raises no false
+contradiction on meaning-preserving paraphrase (0/33), scores byte-identical
 candidates identically (8/8), and reproduces every structural arm signature while blind to
 the arms.
 
 **Not established.** Whether its quality judgements match a native Japanese reader's;
 whether it ranks the 101 abstractive candidates correctly, since no ground truth exists for
-that subset; and whether the aggregate per-arm figures are free of the up-to-2.3-point
-rater effect between judge instances.
+that subset; whether its scores are *stable* under paraphrase, as opposed to raising no
+false contradiction (only 15/33 controls kept the same score, confounded by rater effect);
+whether it detects date corruptions at all, since those labels proved invalid; and whether
+any per-arm figure or within-article ranking is free of the rater effect between judge
+instances.

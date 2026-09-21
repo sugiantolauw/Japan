@@ -7,9 +7,10 @@ annotated — the evaluator catches **100% of entity and quantity swaps**, penal
 of 33 meaning-preserving paraphrases, scores byte-identical candidates identically **8/8**,
 and reproduces every structural failure signature while blind to which candidate is which.
 
-**What it does not.** It catches wrong dates at only **64%**. There is no ground truth for
-ranking the 101 candidates that genuinely need judgement, so I can show my evaluator
-disagrees with a cheap baseline there but not that it is right. And my own aggregation rule
+**What it does not.** **My date-detection labels turned out to be invalid** and the 64% figure they produced is
+withdrawn (§3.2). There is no ground truth for ranking the 101 candidates that genuinely
+need judgement, so I can show my evaluator disagrees with a cheap baseline there but not
+that it is right. And my own aggregation rule
 is wrong: it ranks a verbatim copy of the article first in half the articles, because a
 copy cannot be unfaithful. I measured which alternative fixes that and did not change the
 frozen rule.
@@ -163,17 +164,34 @@ not merely scoring low.
 | entity swap | 40/40 = 100% | [91%, 100%] |
 | quantity swap | 18/18 = 100% | [82%, 100%] |
 | polarity reversal | 20/24 = 83% | [64%, 93%] |
-| **date swap** | **14/22 = 64%** | [43%, 80%] |
+| **all of the above** | **78/82 = 95%** | [88%, 98%] |
+| ~~date swap~~ | ~~14/22 = 64%~~ | **withdrawn — see below** |
 
-**Specificity 0/33.** No meaning-preserving control produced a false contradiction, and
-coherence and selection on the 104 corruptions stayed at **3.99 and 3.96** — the
-perturbations changed facts, and only the fact-sensitive dimension moved.
+**The date labels are invalid and I withdraw that figure.** My generator verified that the
+original date appeared *somewhere* in the article — not that it supported the event the
+summary attributed it to. Auditing the misses: a summary asserts `警察は10日、被害件数を
+516件に上方修正し…発表` while the article's only uses of `10日` are a justice minister's
+newspaper interview and a street protest. The original date was already unsupported for
+that event, so swapping it creates no contradiction, and the judge declining to call one
+**may be correct**. By a conservative proxy, **12 of 22 date items** have no article
+sentence sharing even two content words with the clause asserting the date.
 
-**I predicted polarity reversal would be hardest. Wrong — date swaps are, and all eight
-missed number swaps are dates** while quantities are caught 18/18. The likely cause is
-specific to this data: with the lead paragraph stripped, an absent date may genuinely have
-been stated in text the judge never saw, so hedging to UNSUPPORTED may be correct
-calibration. Operationally: **do not trust this evaluator on dates.**
+I first reported this as "the judge is weak on dates" and speculated that hedging might be
+correct calibration. The audit turns that speculation into a mechanism — and shifts the
+fault from the judge to my test. The corruption types with sound labels are detected at
+**95%**.
+
+**Specificity, stated precisely.** No meaning-preserving control produced a false
+contradiction naming the paraphrase (**0/33**), and coherence and selection on the
+corruptions stayed at **3.99 and 3.96**. But that is a claim-label test, not score
+stability. Comparing each control against its own original, faithfulness is **unchanged in
+only 15/33** — 12 up, 6 down. Two caveats pull in opposite directions: the two runs used
+different rater instances, and the direction of the shift tracks rater strictness (originals
+from the strict batches shift **+0.75**, from the lenient batch **−0.17**), so most of the
+movement is the E4 rater effect rather than paraphrase sensitivity. But not all of it —
+`到着し、`→`到着して、`, a particle change that cannot alter meaning, still moved a score
+from 4 to 3. **Score stability under paraphrase is not established**, and the design could
+not establish it, because I never scored a control and its original with the same rater.
 
 ### 3.3 Full corpus, and dimension independence
 
@@ -256,17 +274,24 @@ Ordered by how much each should change a reader's confidence.
    score 3, so raters route everything to one side. Two judge batches produced zero 3s; one
    produced eleven 3s and zero 2s — the same candidate class scored ~1 point apart.
    (`runs/KNOWN_ERRORS.md` E4.)
-3. **Cross-article aggregates carry a rater effect up to 2.3 points.** Five judge instances
-   scored ten articles each. They agree *exactly* where the answer is forced (lead extract
-   4.0, misattached 0.0, zero spread) and diverge on the graded middle. Within-article
-   rankings are immune — one rater scores all five candidates.
+3. **Cross-article aggregates carry a rater effect up to 2.3 points**, and I cannot show
+   within-article rankings are safe from it. Five judge instances scored ten articles each.
+   They agree *exactly* where the answer is forced (lead extract 4.0, misattached 0.0, zero
+   spread) and diverge on the graded middle. I claimed within-article rankings were
+   **immune** because one rater scores all five candidates; that was asserted, not tested.
+   Simulating the boundary shift changes no ranking (0/50), but that only covers a uniform
+   monotone shift — raters differing *non-uniformly* between two candidates would merge or
+   split a tie and reorder them. Testing it needs the same article scored twice by
+   different raters, which this design never did. The honest claim is **attenuated, not
+   eliminated, and unvalidated.**
 4. **No native-speaker validation.** I do not read Japanese. Validation rests on constructed
    ground truth, structurally guaranteed relations, internal consistency, and mechanical
    auditing of cited evidence. None of it establishes whether the judge's sense of a *good*
    Japanese summary matches a native reader's.
 5. **Constructed ground truth covers 3 of 6 corruption types.** Fabrication requires
    generating false content, not substituting a verified span.
-6. **Dates detected at 64% against 100% for entities and quantities** (§3.2).
+6. **The date-perturbation labels are invalid** and that figure is withdrawn (§3.2). Date
+   corruption detection is simply unmeasured.
 7. **Coverage is length-correlated** (+0.43 within arm).
 8. **Three articles have a coverage yardstick that misses their main event**, because the
    key-point prompt required body-verbatim excerpts while the evidence boundary is title

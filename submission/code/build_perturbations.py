@@ -35,13 +35,14 @@ Every drop-type item is verified programmatically before being written out.
 Nothing here is judged for "quality" -- only mechanically checked.
 """
 
+import os
 import json
 import random
 import re
 import sys
 from collections import Counter, defaultdict
 
-ROOT = "/home/user/japan"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = f"{ROOT}/data"
 RUNS_DIR = f"{ROOT}/runs"
 

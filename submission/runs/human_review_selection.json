@@ -1,0 +1,16 @@
+{
+  "seed": 20260918,
+  "method": "sorted(splits.heldout) then random.Random(seed).sample(ids, 10)",
+  "selected_article_ids": [
+    "features-and-analysis-46478194",
+    "43985653",
+    "features-and-analysis-42940954",
+    "38476572",
+    "52000333",
+    "36881141",
+    "55155049",
+    "44708557",
+    "44285473",
+    "52407075"
+  ]
+}

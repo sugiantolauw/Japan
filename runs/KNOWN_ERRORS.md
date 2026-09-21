@@ -147,3 +147,50 @@ Four defects in frozen or delivered artifacts have now been found by the agents 
 against them rather than by their author: topic labels for propositions, partial span
 replacement, impossible perturbation values, and now a self-contradictory scale anchor. In
 every case the agent reported it without being asked and declined to paper over it.
+
+## E6 — The date-perturbation labels are invalid (external review finding)
+
+The generator verified that `span_original` appeared **somewhere** in the article. It never
+verified that the date **supported the event the summary attributed it to**.
+
+Example: a summary asserts `警察は10日、被害件数を516件に上方修正し…発表した`. The article's
+only occurrences of `10日` are a justice minister's newspaper interview and a street
+protest. The original date was already unsupported for that event, so substituting it
+creates no contradiction — and the judge declining to mark one **may be correct**.
+
+Conservative proxy: **12 of 22** date items have no article sentence sharing even two
+content words with the clause asserting the date.
+
+**The 64% date-detection figure is withdrawn.** Detection on the corruption types whose
+labels survive the audit is **78/82 = 95%** [88%, 98%]. Date corruption detection is
+unmeasured, not poor.
+
+This is the fourth time a measurement instrument of mine was at fault rather than the
+judge, and the second where I had already written down the correct explanation as
+speculation without testing it.
+
+## E7 — "Within-article rankings are immune to rater effects" was asserted, not tested
+
+Simulating the E4 boundary shift changes no ranking (0/50), but that only covers a
+*uniform monotone* shift. Raters differing **non-uniformly** between two candidates in the
+same article would merge or split a tie and reorder them. Testing this requires the same
+article scored twice by different raters, which the design never did. Corrected claim:
+**attenuated, not eliminated, and unvalidated.**
+
+## E8 — Specificity was stated more broadly than measured
+
+"0/33 false positives" is a claim-label result: no control produced a CONTRADICTED claim
+naming the paraphrase. It is **not** score stability. Against their own originals,
+faithfulness is unchanged in only **15/33** controls (12 up, 6 down). The direction tracks
+rater strictness (+0.75 from strict batches, −0.17 from the lenient one), so most movement
+is the E4 rater effect — but not all: `到着し、`→`到着して、` moved a score from 4 to 3.
+Score stability under paraphrase is **not established**, and could not be, because controls
+and originals were never scored by the same rater.
+
+## E9 — A hardcoded path broke three scripts in the packaged submission
+
+`build_perturbations.py` set `ROOT = "/home/user/japan"`. My reproducibility check was run
+from the repo root, so it passed while the packaged submission was broken — **I verified
+the wrong thing.** Fixed to resolve from `__file__`; `arm_census.json` and `split.json`
+moved into `runs/`. All five scripts now run from `submission/` and reproduce
+byte-identical output.
