@@ -1,9 +1,10 @@
 # Evaluating a Japanese News Summarizer
 
 **What this evaluation establishes.** The dataset is built on a fixed template that I
-recovered from text relations alone, which means only 2 of 5 candidates per article need
-semantic judgement. Against corruptions I scripted myself, on the subset whose labels survived a
-semantic audit — the evaluator catches **100% of entity and quantity swaps**, raises no contradiction attributable to a
+recovered from text relations alone, which leaves two candidates per article structurally
+undetermined while the rest carry a diagnostic hypothesis — all five still require semantic
+evaluation. Against corruptions I scripted myself, over the 82 non-date perturbations retained after
+withdrawing the invalid date tests — the evaluator catches **100% of entity and quantity swaps**, raises no contradiction attributable to a
 meaning-preserving edit, scores byte-identical candidates identically **8/8**,
 and reproduces every structural failure signature while blind to which candidate is which.
 
@@ -167,7 +168,7 @@ not merely scoring low.
 | entity swap | 40/40 = 100% | [91%, 100%] |
 | quantity swap | 18/18 = 100% | [82%, 100%] |
 | polarity reversal | 20/24 = 83% | [64%, 93%] |
-| **all of the above** | **78/82 = 95%** | [88%, 98%] |
+| **all three types above** | **78/82 = 95%** | [88%, 98%] |
 | ~~date swap~~ | ~~14/22 = 64%~~ | **withdrawn — see below** |
 
 **The date labels are invalid and I withdraw that figure.** My generator verified that the
@@ -181,8 +182,9 @@ sentence sharing even two content words with the clause asserting the date.
 
 I first reported this as "the judge is weak on dates" and speculated that hedging might be
 correct calibration. The audit turns that speculation into a mechanism — and shifts the
-fault from the judge to my test. The corruption types with sound labels are detected at
-**95%**.
+fault from the judge to my test. Detection over the 82 retained non-date perturbations is **95%**. Note this is a
+category-level exclusion — I withdrew the date type wholesale rather than auditing each of
+the 22 rows, so the retained set is "non-date", not "individually verified".
 
 **Specificity, stated precisely.** Three of 33 controls carry a contradicted claim whose text contains the edited token, but
 in all three the falsity **predates the edit** (fabricated arson; a reversed dissolution
@@ -214,9 +216,10 @@ own reference on coherence alone; misattached candidates floor both fact dimensi
 staying fluent — dimension independence on natural data.
 
 **Determinism: 8/8.** All duplicate-reference pairs received identical score vectors.
-**The reference does not sweep: first in 2/50 articles.**
+**The reference does not sweep:** ranked first in **3/50** articles, and sole winner in
+**1/50**.
 
-### 3.4 The ranking rule is broken — and here is which fix works
+### 3.4 The ranking rule is broken — and what the sensitivity analysis shows
 
 A verbatim copy cannot be unfaithful. Lead extracts score faithfulness **4.00 in every
 batch without exception**. Under faithfulness-first ordering they take first place in
@@ -279,8 +282,10 @@ independent of length.
 
 Ordered by how much each should change a reader's confidence.
 
-1. **The ranking rule is wrong and I know it is** (§3.4). Use the dimension vector or
-   `rank_unweighted_sum`, not `within_article_rank`.
+1. **The ranking rule is wrong and I know it is** (§3.4). Use the four-dimension vector as
+   the primary output and treat every aggregate ranking — including
+   `rank_unweighted_sum` — as exploratory. No rule here has independent quality labels
+   behind it.
 2. **Faithfulness is effectively a four-point scale.** The frozen score-2 anchor's own
    example (*an unstated date, a descriptor*) is precisely the immaterial case defining
    score 3, so raters route everything to one side. Two judge batches produced zero 3s; one
@@ -297,7 +302,7 @@ Ordered by how much each should change a reader's confidence.
    different raters, which this design never did. The honest claim is **attenuated, not
    eliminated, and unvalidated.**
 4. **No native-speaker validation.** I do not read Japanese. Validation rests on constructed
-   ground truth, structurally guaranteed relations, internal consistency, and mechanical
+   ground truth, expected structural relations, internal consistency, and mechanical
    auditing of cited evidence. None of it establishes whether the judge's sense of a *good*
    Japanese summary matches a native reader's.
 5. **Constructed ground truth covers 3 of 6 corruption types.** Fabrication requires
@@ -316,7 +321,8 @@ Ordered by how much each should change a reader's confidence.
 
 ### Next, in order
 
-1. Re-run with coverage as the primary sort key — one hour, addresses the largest defect.
+1. Validate an aggregation policy against independent quality judgements, rather than
+   choosing the rule that satisfies the most structural priors.
 2. Fix the faithfulness anchor contradiction and measure how much of the 2.3-point rater
    spread it was causing.
 3. Have 3–5 articles reviewed by a Japanese reader — not as ground truth, but to check

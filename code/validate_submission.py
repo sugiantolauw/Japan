@@ -18,6 +18,14 @@ def main():
         for f in ('within_article_rank','rank_coverage_first','rank_unweighted_sum'):
             if not (1<=r[f]<=5): bad.append(f"{r['summary_id']} {f}={r[f]} out of range")
         if r['score_sum']!=sum(r[d] for d in D): bad.append(f"{r['summary_id']} score_sum inconsistent")
+    # guard against the stale-copy hazard: submission/runs must match runs/
+    import glob, filecmp
+    src=os.path.join(ROOT,'runs'); dst=os.path.join(ROOT,'submission','runs')
+    if os.path.isdir(src) and os.path.isdir(dst):
+        for f in glob.glob(os.path.join(src,'*.md')):
+            b=os.path.join(dst,os.path.basename(f))
+            if os.path.exists(b) and not filecmp.cmp(f,b,shallow=False):
+                bad.append(f"stale copy: submission/runs/{os.path.basename(f)} differs from runs/")
     print(f"checked {len(rows)} rows")
     for b in bad[:10]: print("  FAIL:",b)
     print("OK — scores.jsonl valid" if not bad else f"{len(bad)} failure(s)")

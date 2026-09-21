@@ -52,7 +52,7 @@ against seed 20260918).
 # rebuild and validate the deliverable from the saved judge verdicts
 python3 code/assemble_scores.py           # regenerates scores.jsonl
 python3 code/validate_submission.py       # 250 rows, ranges, join integrity
-python3 code/analyze_results.py           # recomputes every table in report.md
+python3 code/analyze_results.py           # recomputes the main quantitative results in report.md
 
 # verification — runs against the committed artifacts, no model calls
 python3 code/provenance_check.py          # checks declared producer metadata (see caveat below)

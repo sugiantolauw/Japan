@@ -1,3 +1,10 @@
+> **SUPERSEDED IN PART.** Written before the external audit. The verification checks
+> below confirm that each substituted value is *absent from the article* — they do
+> **not** confirm that the original value *supported the event the summary attributed
+> it to*. That gap invalidates the 22 date-swap labels; see `KNOWN_ERRORS.md` E6. The
+> entity, quantity and polarity labels are unaffected. Authoritative results are in
+> `submission/report.md` §3.2.
+
 # Perturbation suite report
 
 Seed: 20260918. Source pool: arm in {abstractive_undetermined, reference}, articles in exploration+development splits only (never held-out).

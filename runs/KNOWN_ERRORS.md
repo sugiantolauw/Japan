@@ -49,18 +49,23 @@ is what prompted this check. The three perturbation rows for that article derive
 source candidates `…6baeebc9` and `…9d69dc21`; neither contains `20日`, so the erroneous
 precedent was never applied to the claim it concerns.
 
-The rule the example was illustrating is sound and was applied correctly in the
-perturbation run: a candidate
-asserting a date incompatible with the article's date **for the same event** is
-contradicted. All 26 CONTRADICTED date-bearing claims in batch A are perturbation-induced
-swaps of a date for the same event — genuine contradictions, correctly labelled.
+The rule the example was illustrating is sound in principle: a candidate asserting a date
+incompatible with the article's date **for the same event** is contradicted.
+
+**SUPERSEDED:** I then wrote that all 26 CONTRADICTED date-bearing claims in batch A were
+same-event swaps and therefore correctly labelled. **E6 shows that is wrong** — the
+generator never checked same-event support, so an unknown share of those date labels are
+invalid.
 
 ### Why it is not being fixed
 
-The rubric is frozen, the error was found after freezing, and it demonstrably changed no
-score. Editing a frozen input post hoc — even to correct a real mistake — makes every
-other frozen artifact's status negotiable. The error stands, documented, with the evidence
-that it was inert.
+The rubric is frozen and the error was found after freezing. Editing a frozen input post
+hoc — even to correct a real mistake — makes every other frozen artifact's status
+negotiable. The error stands, documented, with its measured effect recorded above.
+
+*(An earlier version of this section said the error "demonstrably changed no score" and
+"was inert". That was written before the full scoring run and is wrong: it depressed two
+candidates by one faithfulness point each, as the corrected section above records.)*
 
 ## E2 — Coverage yardstick misses title-only main events (3 articles)
 
